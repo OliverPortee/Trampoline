@@ -8,20 +8,20 @@ Its written in Swift because I love Swift.
 ## Basics
 The trampoline jumping sheet is modelled as a mesh of particles which are connected with springs. This mesh is a so-called spring mass damper system. This simulation aims to be realistic. It uses physical quantities in "real" units (like metre, seconds, newton, ...).
 
-###Renderer
+### Renderer
 The Renderer uses metal to render vertices (provided by the mesh) on the screen. It can show the frames in a MTKView or saves them in a movie file.
 
-###Computation
+### Computation
 The mesh needs to be updated every frame. Therefore, the program uses a metal kernel shader function to
 
 	1. update the springs (calculate the force on the connected particles) and 
 	2. update the particles (calculating acceleration, velocity and new position of each particle based on the applied force).
 
-###Data
+### Data
 The program saves 
 
 
-##To Do
+## To Do
 There is still a lot to do:
 
 	- write update model
@@ -33,5 +33,5 @@ There is still a lot to do:
 	
 
 
-##Sources 
-Thanks to [https://github.com/warrenm/MetalOfflineRecording](this) repository! Helped a lot. 
+## Sources 
+Thanks to [this](https://github.com/warrenm/MetalOfflineRecording) repository! Helped a lot. 

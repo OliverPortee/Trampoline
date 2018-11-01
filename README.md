@@ -29,6 +29,7 @@ There is still a lot to do:
 	- write dataController which fires when it's time to save new data
 	- work on framerate 
 	- work on usability: show framerate, show button for non real time rendering, show height and force of dataParticle, button to start/stop the model
+	- make UI and Unit Tests
 	- document program
 	
 

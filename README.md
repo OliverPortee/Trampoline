@@ -14,8 +14,8 @@ The Renderer uses metal to render vertices (provided by the mesh) on the screen.
 ### Computation
 The mesh needs to be updated every frame. Therefore, the program uses a metal kernel shader function to
 
-	1. update the springs (calculate the force on the connected particles) and 
-	2. update the particles (calculating acceleration, velocity and new position of each particle based on the applied force).
+1. update the springs (calculate the force on the connected particles) and 
+2. update the particles (calculating acceleration, velocity and new position of each particle based on the applied force).
 
 ### Data
 The program saves force and height of the data particle in a DoubleData instance. This data can be written to a file and the python script can be used to display a graph from matplotlib. 
@@ -24,13 +24,13 @@ The program saves force and height of the data particle in a DoubleData instance
 ## To Do
 There is still a lot to do:
 
-	- write update model
-	- write data class to save data
-	- write dataController which fires when it's time to save new data
-	- work on framerate 
-	- work on usability: show framerate, show button for non real time rendering, show height and force of dataParticle, button to start/stop the model
-	- make UI and Unit Tests
-	- document program
+- write update model
+- write data class to save data
+- write dataController which fires when it's time to save new data
+- work on framerate 
+- work on usability: show framerate, show button for non real time rendering, show height and force of dataParticle, button to start/stop the model
+- make UI and Unit Tests
+- document program
 	
 
 

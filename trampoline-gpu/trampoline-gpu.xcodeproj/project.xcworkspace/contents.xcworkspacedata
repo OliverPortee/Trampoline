@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "self:trampoline-gpu.xcodeproj">
+      location = "group:../../Renderer/Renderer">
+   </FileRef>
+   <FileRef
+      location = "self:">
    </FileRef>
 </Workspace>

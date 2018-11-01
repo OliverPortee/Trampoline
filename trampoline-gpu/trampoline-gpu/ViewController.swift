@@ -10,6 +10,9 @@ import Cocoa
 
 class ViewController: NSViewController {
 
+    
+    @IBOutlet weak var simulationView: SimulationView!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 

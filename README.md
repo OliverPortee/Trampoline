@@ -1,8 +1,10 @@
 
 # Trampoline 
 
-Project on a physics based trampoline model, created for my seminar paper at high school (2018-19). It should demonstrate how to mathematically model real world objects. As example question I examine the vertical force on the particle right in the middle (i. e. "dataParticle") which is applied by the surrounding mesh/springs and which dependent on the height of this dataParticle, so how deep the jumping sheet is pushed in. 
+Project on a physics based trampoline model, created for my seminar paper at high school (2018-19). It should demonstrate how to mathematically model real world objects. As example question I examine the vertical force on the particle right in the middle (i. e. "dataParticle") which is applied by the surrounding mesh/springs and which dependent on the height of this dataParticle, so how deep the jumping sheet is pushed in.
+
 This simulation does not aim to be "nice". Its purpose is not to render a beautiful animation. The rendering has only one purpose: to have a visual impression to be abel to control the integrity (can these numbers in the computer *actually* be right?).
+
 Its written in Swift because I love Swift. I'm still an absolute beginner, though.
 
 ## Basics

@@ -7,7 +7,7 @@ This simulation does not aim to be "nice". Its purpose is not to render a beauti
 
 Its written in Swift because I love Swift. I'm still an absolute beginner, though.
 
-## Basics
+## How it works
 The trampoline jumping sheet is modelled as a mesh of particles which are connected with springs. This mesh is a so-called spring mass damper system. This simulation aims to be realistic. It uses physical quantities in "real" units (like metre, seconds, newton,...).
 
 ### Renderer

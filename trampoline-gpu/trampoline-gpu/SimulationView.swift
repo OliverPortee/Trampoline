@@ -12,6 +12,7 @@ class SimulationView: MTKView {
     var currentMeshParameters: MeshParameters?
     var lastFrameTime: NSDate!
     var mouseDragSensitivity: Float = 0.004
+    var dataController: DataController?
     
     required init(coder: NSCoder) {
 
@@ -38,6 +39,9 @@ class SimulationView: MTKView {
         self.renderer = Renderer(device: device!, commandQueue: commandQueue, vertexFunctionName: "particle_vertex_shader", fragmentFunctionName: "fragment_shader", primitiveType: .line, otherFragmentFunctionName: "basic_vertex_shader")
         self.updater = MeshUpdater(device: device!, commandQueue: commandQueue, springFunctionName: "spring_update", particleFunctionName: "particle_update")
      
+        self.dataController = DataController()
+        #warning("dataController needs index and mesh")
+        
         self.mesh = CircularTrampolineMesh(device: device!, projectionMatrix: projectionMatrix, parentModelMatrix: parentModelMatrix, parameters: currentMeshParameters!, updateHandler: {(_ dt: Float) in self.updater.update(dt: dt, mesh: self.mesh)})
 
         lastFrameTime = NSDate()

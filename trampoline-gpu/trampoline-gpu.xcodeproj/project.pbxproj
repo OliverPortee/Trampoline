@@ -16,6 +16,7 @@
 		7515BB07218B69B20036B6E3 /* VideoRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7515BB04218B69B20036B6E3 /* VideoRecorder.swift */; };
 		75C647BA218C2E9500E95715 /* Updater.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C647B9218C2E9500E95715 /* Updater.swift */; };
 		75C647C0218C637B00E95715 /* Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C647BF218C637B00E95715 /* Data.swift */; };
+		75C647C2218CA6C800E95715 /* DataController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C647C1218CA6C800E95715 /* DataController.swift */; };
 		75FF1D26218B5B43001627AC /* SimulationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75FF1D25218B5B43001627AC /* SimulationView.swift */; };
 		75FF1D28218B5BA0001627AC /* Node.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75FF1D27218B5BA0001627AC /* Node.swift */; };
 		75FF1D2D218B5FB1001627AC /* Mesh.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75FF1D2C218B5FB1001627AC /* Mesh.swift */; };
@@ -35,6 +36,7 @@
 		7515BB04218B69B20036B6E3 /* VideoRecorder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoRecorder.swift; sourceTree = "<group>"; };
 		75C647B9218C2E9500E95715 /* Updater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Updater.swift; sourceTree = "<group>"; };
 		75C647BF218C637B00E95715 /* Data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Data.swift; sourceTree = "<group>"; };
+		75C647C1218CA6C800E95715 /* DataController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataController.swift; sourceTree = "<group>"; };
 		75FF1D25218B5B43001627AC /* SimulationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulationView.swift; sourceTree = "<group>"; };
 		75FF1D27218B5BA0001627AC /* Node.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Node.swift; sourceTree = "<group>"; };
 		75FF1D2C218B5FB1001627AC /* Mesh.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mesh.swift; sourceTree = "<group>"; };
@@ -98,6 +100,7 @@
 			isa = PBXGroup;
 			children = (
 				75C647BF218C637B00E95715 /* Data.swift */,
+				75C647C1218CA6C800E95715 /* DataController.swift */,
 			);
 			path = Data;
 			sourceTree = "<group>";
@@ -192,6 +195,7 @@
 				75C647BA218C2E9500E95715 /* Updater.swift in Sources */,
 				75FF1D28218B5BA0001627AC /* Node.swift in Sources */,
 				7515BB05218B69B20036B6E3 /* Renderer.swift in Sources */,
+				75C647C2218CA6C800E95715 /* DataController.swift in Sources */,
 				75FF1D2D218B5FB1001627AC /* Mesh.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

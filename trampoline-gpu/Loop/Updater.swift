@@ -11,6 +11,7 @@ class MeshUpdater: NSObject {
     var particlePipelineState: MTLComputePipelineState
     var commandQueue: MTLCommandQueue
     var gravity: Float = 0
+    var dataController: DataController?
 
     
     
@@ -27,6 +28,9 @@ class MeshUpdater: NSObject {
     
     func update(dt: Float, mesh: Mesh) {
         updateSprings(mesh: mesh)
+        if let dataController = self.dataController {
+            dataController.update()
+        }
         
         updateParticles(dt: dt, mesh: mesh)
         

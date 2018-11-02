@@ -221,7 +221,7 @@ extension CircularTrampolineMesh {
     }
 
     
-    static func makeCircularJumpingSheet(parameters: MeshParameters) -> ([Particle], [Spring]) {
+    static func makeCircularJumpingSheet(parameters: MeshParameters) -> ([Particle], [Spring], Int) {
         
 
         
@@ -418,12 +418,18 @@ extension CircularTrampolineMesh {
         
         var particles = [Particle]()
         
+        let middleParticle = getNearestHelperParticles(ofPosition: float3(0, 0, 0), withinArray: helperParticles, count: 1, containingSelf: true)[0]
+        
+        let middleParticleIndex = helperParticles.firstIndex { $0 == middleParticle }!
+        
         for hp in helperParticles {
             particles.append(Particle(pos: hp.pos, vel: hp.vel, force: hp.force, mass: hp.mass, isLocked: hp.isLocked))
         }
         
+        
+        
         print("completed makeCircularJumpingSheet")
-        return (particles, springs)
+        return (particles, springs, middleParticleIndex)
     }
     
 }

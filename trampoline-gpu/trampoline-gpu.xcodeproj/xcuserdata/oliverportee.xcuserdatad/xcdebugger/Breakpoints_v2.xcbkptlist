@@ -10,11 +10,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "trampoline-gpu/SimulationView.swift"
-            timestampString = "562865545.423045"
+            timestampString = "562889368.489411"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "56"
-            endingLineNumber = "56"
+            startingLineNumber = "61"
+            endingLineNumber = "61"
             landmarkName = "draw(_:)"
             landmarkType = "7">
          </BreakpointContent>

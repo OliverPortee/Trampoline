@@ -95,10 +95,12 @@ class Mesh: Node, NonRealTimeRenderable {
 class CircularTrampolineMesh: Mesh {
     
     var parameters: MeshParameters
+    let middleParticleIndex: Int
     
     init(device: MTLDevice, projectionMatrix: GLKMatrix4, parentModelMatrix: GLKMatrix4, parameters: MeshParameters, updateHandler: @escaping (_ dt: Float) -> Void) {
         self.parameters = parameters
-        let (particles, springs) = CircularTrampolineMesh.makeCircularJumpingSheet(parameters: parameters)
+        let (particles, springs, middleParticleIndex) = CircularTrampolineMesh.makeCircularJumpingSheet(parameters: parameters)
+        self.middleParticleIndex = middleParticleIndex
         super.init(device: device, projectionMatrix: projectionMatrix, parentModelMatrix: parentModelMatrix, particles: particles, springs: springs, updateHandler: updateHandler)
         initOtherRenderingBuffer()
     }

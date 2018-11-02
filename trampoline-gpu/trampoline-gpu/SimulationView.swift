@@ -31,19 +31,20 @@ class SimulationView: MTKView {
                                                     outerSpringLength: 0.17)
         
         
-        let projectionMatrix = GLKMatrix4MakePerspective(85 * Float.pi / 180, Float(self.bounds.size.width / self.bounds.size.height), 0.01, 100)
+        let projectionMatrix = GLKMatrix4MakePerspective(85 * Float.pi / 180, frame.aspectRatio, 0.01, 100)
         var parentModelMatrix = GLKMatrix4Identity; parentModelMatrix = GLKMatrix4Translate(parentModelMatrix, 0, 0, -3); parentModelMatrix = GLKMatrix4RotateX(parentModelMatrix, 20.0 * Float.pi / 180)
         
         self.device = MTLCreateSystemDefaultDevice()!
         let commandQueue = device!.makeCommandQueue()!
         self.renderer = Renderer(device: device!, commandQueue: commandQueue, vertexFunctionName: "particle_vertex_shader", fragmentFunctionName: "fragment_shader", primitiveType: .line, otherFragmentFunctionName: "basic_vertex_shader")
         self.updater = MeshUpdater(device: device!, commandQueue: commandQueue, springFunctionName: "spring_update", particleFunctionName: "particle_update")
-     
-        self.dataController = DataController()
-        #warning("dataController needs index and mesh")
         
         self.mesh = CircularTrampolineMesh(device: device!, projectionMatrix: projectionMatrix, parentModelMatrix: parentModelMatrix, parameters: currentMeshParameters!, updateHandler: {(_ dt: Float) in self.updater.update(dt: dt, mesh: self.mesh)})
-
+        self.dataController = DataController()
+        dataController!.dataParticleIndex = mesh.middleParticleIndex
+        dataController!.delegate = mesh 
+        
+        
         lastFrameTime = NSDate()
 //        renderer.renderMovie(size: self.frame.size, seconds: 10, deltaTime: 1.0 / 120.0, renderObject: mesh, url: URL(fileURLWithPath: "movie.mp4"))
        
@@ -67,6 +68,10 @@ class SimulationView: MTKView {
         mesh.rotationZ += (Float(event.deltaZ) * mouseDragSensitivity)
     }
     
+
+    override func resize(withOldSuperviewSize oldSize: NSSize) {
+        mesh.projectionMatrix = float4x4(glkMatrix: GLKMatrix4MakePerspective(85 * Float.pi / 180, frame.aspectRatio, 0.01, 100))
+    }
     
     
     
@@ -116,4 +121,10 @@ struct MeshParameters: CustomStringConvertible {
         return "CircularTrampolineSheet{r1: \(r1), r2: \(r2), fineness: \(fineness), n_outerSprings: \(n_outerSprings), innerSpringConstant: \(innerSpringConstant), innerVelConstant: \(innerVelConstant), outerSpringConstant: \(outerSpringConstant), outerVelConstant: \(outerVelConstant), outerSpringLength: \(outerSpringLength)}"
     }
 
+}
+
+
+
+extension NSRect {
+    var aspectRatio: Float { return Float(self.width / self.height) }
 }

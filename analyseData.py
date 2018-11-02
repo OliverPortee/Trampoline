@@ -6,11 +6,11 @@ structure of data file:
 
 lines beginning with # are ignored; #'s are used in first line and to divide different data sets
 # lines have meta data (date, cpu or gpu, real time or non real time)
-#1; 31.10.2018 16:07; rendering: cpu; time: real time
+# 31.10.2018 16:07; rendering: cpu; time: real time
 
- #1
+ #
  data...
- #2
+ #
  data...
 
  data consists of paires of

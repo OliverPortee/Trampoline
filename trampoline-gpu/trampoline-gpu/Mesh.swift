@@ -4,7 +4,11 @@ import MetalKit
 import GLKit
 import simd
 
-struct Particle {
+protocol _StaticDefaultProperty { static var defaultSelf: Self { get } }
+
+
+struct Particle: _StaticDefaultProperty {
+    
     var pos: float3
     var vel: float3
     var force: float3
@@ -22,31 +26,50 @@ struct Particle {
     init(x: Float, y: Float, z: Float, mass: Float, isLocked: Bool = false) {
         self.init(pos: float3(x: x, y: y, z: z), vel: float3(x: 0, y: 0, z: 0), force: float3(x: 0, y: 0, z: 0), mass: mass, isLocked: isLocked)
     }
+    
+    static var defaultSelf: Particle { return Particle(x: 0, y: 0, z: 0, mass: 1) }
 }
 
-struct Spring {
+struct Spring: _StaticDefaultProperty {
+    
     var indices: int2
     var initialLength: Float
     var springConstant: Float
     var velConstant: Float
+    
+    static var defaultSelf: Spring { return Spring(indices: int2(0, 1), initialLength: 1, springConstant: 1, velConstant: 1) }
+
 }
 
+struct VertexIn {
+    var position: float3
+    var color: float3
+}
 
 struct Constants {
     static let particleStride = MemoryLayout<Particle>.stride
     static let springStride = MemoryLayout<Spring>.stride
+    static let vertexInStride = MemoryLayout<VertexIn>.stride
 }
 
 
 class Mesh: Node, NonRealTimeRenderable {
     
-
+    var otherRenderingBuffer: MTLBuffer?
+    var otherVertexCount: Int { return (otherRenderingBuffer?.length ?? 0) / Constants.vertexInStride  }
+  
     private(set) var particleBuffer: MTLBuffer // [Particle]
     private(set) var springBuffer: MTLBuffer // [Spring]
     
     var vertexCount: Int { return (springBuffer.length * 2) / Constants.springStride }
+    var springCount: Int { return springBuffer.length / Constants.springStride }
+    var particleCount: Int { return particleBuffer.length / Constants.particleStride }
     var clearColor: MTLClearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 1)
     
+    var particleArray: [Particle] { return Array<Particle>(fromMTLBuffer: particleBuffer) }
+    var springArray: [Spring] { return Array<Spring>(fromMTLBuffer: springBuffer) }
+    
+    var updateHandler: (_ dt: Float) -> Void
     
     var setBufferHandler: (inout MTLRenderCommandEncoder) -> Void {
         return {(_ renderEncoder) in
@@ -56,24 +79,83 @@ class Mesh: Node, NonRealTimeRenderable {
     }
 
 
-    init(device: MTLDevice, projectionMatrix: GLKMatrix4, parentModelMatrix: GLKMatrix4, particles: [Particle], springs: [Spring]) {
+    init(device: MTLDevice, projectionMatrix: GLKMatrix4, parentModelMatrix: GLKMatrix4, particles: [Particle], springs: [Spring], updateHandler: @escaping (_ dt: Float) -> Void) {
         
         particleBuffer = device.makeBuffer(bytes: particles, length: particles.count * Constants.particleStride, options: [])!
         springBuffer = device.makeBuffer(bytes: springs, length: springs.count * Constants.springStride, options: [])!
-        
+        self.updateHandler = updateHandler
 
         super.init(device: device, projectionMatrix: projectionMatrix, parentModelMatrix: parentModelMatrix)
-    }
-    
-    func update(dt: Double) {
-        rotationY += 0.01
     }
     
     
 }
 
 
-extension Mesh {
+class CircularTrampolineMesh: Mesh {
+    
+    var parameters: MeshParameters
+    
+    init(device: MTLDevice, projectionMatrix: GLKMatrix4, parentModelMatrix: GLKMatrix4, parameters: MeshParameters, updateHandler: @escaping (_ dt: Float) -> Void) {
+        self.parameters = parameters
+        let (particles, springs) = CircularTrampolineMesh.makeCircularJumpingSheet(parameters: parameters)
+        super.init(device: device, projectionMatrix: projectionMatrix, parentModelMatrix: parentModelMatrix, particles: particles, springs: springs, updateHandler: updateHandler)
+        initOtherRenderingBuffer()
+    }
+    
+    func initOtherRenderingBuffer() {
+        var vertexArray = [VertexIn]()
+        let smoothness: Float = 10.0
+        let radius = parameters.r1
+        
+        for angle in stride(from: 0, through: 2 * Float.pi + 1.0 / smoothness, by: 1.0 / smoothness) {
+            let x = radius * sin(angle)
+            let z = radius * cos(angle)
+            let vertexIn = VertexIn(position: float3(x: x, y: 0, z: z), color: float3(0, 0.5, 1))
+            vertexArray.append(vertexIn)
+            if angle != 0 { vertexArray.append(vertexIn) }
+        }
+        vertexArray.removeLast()
+        self.otherRenderingBuffer = self.device.makeBuffer(bytes: vertexArray, length: vertexArray.count * Constants.vertexInStride, options: [])
+    }
+    
+    
+}
+
+
+
+
+extension Array where Element: _StaticDefaultProperty {
+    init(fromMTLBuffer buffer: MTLBuffer) {
+        assert(buffer.length % MemoryLayout<Element>.stride == 0)
+        let countOfInstances = buffer.length / MemoryLayout<Element>.stride
+        self.init(repeating: Element.defaultSelf, count: countOfInstances)
+        let result = buffer.contents().bindMemory(to: Element.self, capacity: countOfInstances)
+        for index in 0..<countOfInstances { self[index] = result[index] }
+    }
+}
+
+extension MTLBuffer {
+    func getInstances<T>(atByte byte: Int, countOfInstances: Int = 1) -> [T] {
+        assert(byte % MemoryLayout<T>.stride == 0)
+        let result = contents().advanced(by: byte).bindMemory(to: T.self, capacity: countOfInstances)
+        return Array(UnsafeBufferPointer(start: result, count: countOfInstances))
+    }
+    
+    func modifyInstances<T>(atByte byte: Int, newValues: [T]) {
+        let tStride = MemoryLayout<T>.stride
+        let count = newValues.count
+        assert(byte % tStride == 0)
+        assert(byte + tStride * count <= length)
+        
+        contents().advanced(by: byte).copyMemory(from: newValues, byteCount: tStride * count)
+    }
+    
+}
+
+
+
+extension CircularTrampolineMesh {
     
     class HelperParticle: Equatable {
         

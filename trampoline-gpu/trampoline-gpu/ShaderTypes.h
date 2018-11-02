@@ -16,8 +16,11 @@
 typedef NS_ENUM(NSInteger, BufferIndex)
 {
     ParticleBufferIndex = 0,
-    SpringBufferIndex   = 1,
-    UniformsBufferIndex = 2
+    SpringBufferIndex = 1,
+    OtherRenderingBufferIndex = 4,
+    UniformsBufferIndex = 2,
+    ConstantsBufferIndex = 3
+
 };
 
 
@@ -26,6 +29,7 @@ typedef struct
     matrix_float4x4 projectionMatrix;
     matrix_float4x4 modelViewMatrix;
 } Uniforms;
+
 
 
 

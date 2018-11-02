@@ -12,19 +12,17 @@ protocol Renderable {
     var projectionMatrix: float4x4 { get set }
     var modelViewMatrix: float4x4 { get }
     var setBufferHandler: ( inout MTLRenderCommandEncoder) -> Void { get }
+    var otherRenderingBuffer: MTLBuffer? { get set }
+    var otherVertexCount: Int { get } 
 }
 
 protocol Updatable {
     
-    func update(dt: Double)
+    var updateHandler: (_ dt: Float) -> Void { get set }
     
 }
 
 typealias NonRealTimeRenderable = Renderable & Updatable
-
-
-
-
 
 let alignedUniformsSize = (MemoryLayout<Uniforms>.size & ~0xFF) + 0x100
 let maxBuffersInFlight = 3
@@ -36,7 +34,7 @@ class Renderer: NSObject {
     
     var device: MTLDevice
     var renderPipelineState: MTLRenderPipelineState
-    var renderPipelineDescriptor: MTLRenderPipelineDescriptor
+    var otherRenderPipelineState: MTLRenderPipelineState?
     var commandQueue: MTLCommandQueue
     var primitiveType: MTLPrimitiveType
     
@@ -48,14 +46,15 @@ class Renderer: NSObject {
 
     
     
-    init(device: MTLDevice, vertexFunctionName: String, fragmentFunctionName: String, primitiveType: MTLPrimitiveType, vertexDescriptor: MTLVertexDescriptor? = nil) {
+    init(device: MTLDevice, commandQueue: MTLCommandQueue, vertexFunctionName: String, fragmentFunctionName: String, primitiveType: MTLPrimitiveType, vertexDescriptor: MTLVertexDescriptor? = nil, otherFragmentFunctionName: String? = nil) {
 
         self.device = device
         let library = device.makeDefaultLibrary()!
         let vertexFuntion = library.makeFunction(name: vertexFunctionName)!
         let fragmentFunction = library.makeFunction(name: fragmentFunctionName)!
         
-        self.renderPipelineDescriptor = MTLRenderPipelineDescriptor()
+   
+        let renderPipelineDescriptor = MTLRenderPipelineDescriptor()
         renderPipelineDescriptor.vertexFunction = vertexFuntion
         renderPipelineDescriptor.fragmentFunction = fragmentFunction
         if let vertexDescriptor = vertexDescriptor {
@@ -64,7 +63,17 @@ class Renderer: NSObject {
         renderPipelineDescriptor.colorAttachments[0].pixelFormat = .bgra8Unorm
         self.renderPipelineState = try! device.makeRenderPipelineState(descriptor: renderPipelineDescriptor)
 
-        self.commandQueue = device.makeCommandQueue()!
+        if let name = otherFragmentFunctionName {
+            let otherPipelineDescriptor = MTLRenderPipelineDescriptor()
+            let otherRenderFunction = library.makeFunction(name: name)!
+            otherPipelineDescriptor.vertexFunction = otherRenderFunction
+            otherPipelineDescriptor.fragmentFunction = fragmentFunction
+            otherPipelineDescriptor.colorAttachments[0].pixelFormat = .bgra8Unorm
+            self.otherRenderPipelineState = try! device.makeRenderPipelineState(descriptor: otherPipelineDescriptor)
+        }
+        
+        
+        self.commandQueue = commandQueue
         self.primitiveType = primitiveType
         
         let uniformBufferSize = alignedUniformsSize * maxBuffersInFlight
@@ -75,11 +84,9 @@ class Renderer: NSObject {
     }
     
     
-    
     func renderFrame(renderObject: Renderable, drawable: CAMetalDrawable) {
         _ = inFlightSemaphore.wait(timeout: DispatchTime.distantFuture)
         let semaphore = inFlightSemaphore
-        
         
         let commandBuffer = self.commandQueue.makeCommandBuffer()!
         commandBuffer.addCompletedHandler { (_) in semaphore.signal() }
@@ -87,6 +94,11 @@ class Renderer: NSObject {
         uniformBufferIndex = (uniformBufferIndex + 1) % maxBuffersInFlight
         uniformBufferOffset = alignedUniformsSize * uniformBufferIndex
         uniforms = UnsafeMutableRawPointer(dynamicUniformBuffer.contents() + uniformBufferOffset).bindMemory(to: Uniforms.self, capacity: 1)
+        uniforms[0].projectionMatrix = renderObject.projectionMatrix
+        uniforms[0].modelViewMatrix = renderObject.modelViewMatrix
+        
+        // start rendering springs
+        #warning("does the screen get cleared only once per frame?")
         
         let renderPassDescriptor = MTLRenderPassDescriptor()
         renderPassDescriptor.colorAttachments[0].texture = drawable.texture
@@ -94,30 +106,38 @@ class Renderer: NSObject {
         renderPassDescriptor.colorAttachments[0].clearColor = renderObject.clearColor
         renderPassDescriptor.colorAttachments[0].storeAction = .store
         
-        uniforms[0].projectionMatrix = renderObject.projectionMatrix
-        uniforms[0].modelViewMatrix = renderObject.modelViewMatrix
-        
-        
         var renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor)!
         renderEncoder.setRenderPipelineState(renderPipelineState)
         renderObject.setBufferHandler(&renderEncoder)
         renderEncoder.setVertexBuffer(dynamicUniformBuffer, offset: 0, index: BufferIndex.UniformsBufferIndex.rawValue) // TODO: correct in draw to texture and let renderObject do this task
-        
         renderEncoder.drawPrimitives(type: primitiveType, vertexStart: 0, vertexCount: renderObject.vertexCount)
-        
         renderEncoder.endEncoding()
         
+        if let otherRenderBuffer = renderObject.otherRenderingBuffer, let pipelineState = self.otherRenderPipelineState {
+            let renderPassDescriptor = MTLRenderPassDescriptor()
+            renderPassDescriptor.colorAttachments[0].texture = drawable.texture
+            renderPassDescriptor.colorAttachments[0].storeAction = .store
+
+            let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor)!
+            renderEncoder.setRenderPipelineState(pipelineState)
+            renderEncoder.setVertexBuffer(otherRenderBuffer, offset: 0, index: BufferIndex.OtherRenderingBufferIndex.rawValue)
+            renderEncoder.setVertexBuffer(dynamicUniformBuffer, offset: 0, index: BufferIndex.UniformsBufferIndex.rawValue) // TODO: correct in draw to texture and let renderObject do this task
+            renderEncoder.drawPrimitives(type: .line, vertexStart: 0, vertexCount: renderObject.vertexCount)
+            renderEncoder.endEncoding()
+            
+        }
         
-//        let copybackEncoder = commandBuffer.makeBlitCommandEncoder()!
-//        copybackEncoder.synchronize(resource: drawable.texture)
-//        copybackEncoder.endEncoding()
+        
+        
         commandBuffer.present(drawable)
         commandBuffer.commit()
         
     }
-    
+
     
     func drawToTexture(texture: inout MTLTexture, clearColor: MTLClearColor, projectionMatrix: float4x4, modelViewMatrix: float4x4, vertexCount: Int, setBufferHandler: (inout MTLRenderCommandEncoder) -> Void) {
+        #warning("render other as well")
+        
         _ = inFlightSemaphore.wait(timeout: DispatchTime.distantFuture)
         let semaphore = inFlightSemaphore
         
@@ -160,7 +180,7 @@ class Renderer: NSObject {
 
 
     
-    func renderMovie(size: CGSize, seconds: Double, deltaTime: Double, renderObject: NonRealTimeRenderable, url: URL) {
+    func renderMovie(size: CGSize, seconds: Float, deltaTime: Float, renderObject: NonRealTimeRenderable, url: URL) {
         
         let textureDescriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: MTLPixelFormat.bgra8Unorm, width: Int(size.width), height: Int(size.height), mipmapped: false)
         textureDescriptor.usage = .renderTarget
@@ -179,9 +199,9 @@ class Renderer: NSObject {
         recorder!.startRecording()
         
         for time in stride(from: 0, through: seconds, by: deltaTime) {
-            renderObject.update(dt: deltaTime)
+            renderObject.updateHandler(deltaTime)
             drawToTexture(texture: &texture, clearColor: renderObject.clearColor, projectionMatrix: renderObject.projectionMatrix, modelViewMatrix: renderObject.modelViewMatrix, vertexCount: renderObject.vertexCount, setBufferHandler: renderObject.setBufferHandler)
-            recorder!.writeFrame(forTexture: texture, time: time)
+            recorder!.writeFrame(forTexture: texture, time: TimeInterval(time))
             
         }
         

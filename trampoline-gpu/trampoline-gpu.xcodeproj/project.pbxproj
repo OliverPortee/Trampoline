@@ -14,6 +14,8 @@
 		7515BB05218B69B20036B6E3 /* Renderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7515BB02218B69B20036B6E3 /* Renderer.swift */; };
 		7515BB06218B69B20036B6E3 /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7515BB03218B69B20036B6E3 /* Shaders.metal */; };
 		7515BB07218B69B20036B6E3 /* VideoRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7515BB04218B69B20036B6E3 /* VideoRecorder.swift */; };
+		75C647BA218C2E9500E95715 /* Updater.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C647B9218C2E9500E95715 /* Updater.swift */; };
+		75C647C0218C637B00E95715 /* Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C647BF218C637B00E95715 /* Data.swift */; };
 		75FF1D26218B5B43001627AC /* SimulationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75FF1D25218B5B43001627AC /* SimulationView.swift */; };
 		75FF1D28218B5BA0001627AC /* Node.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75FF1D27218B5BA0001627AC /* Node.swift */; };
 		75FF1D2D218B5FB1001627AC /* Mesh.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75FF1D2C218B5FB1001627AC /* Mesh.swift */; };
@@ -27,10 +29,12 @@
 		750C1F2A218A3F2200A49258 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		750C1F2C218A3F2200A49258 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		750C1F2D218A3F2200A49258 /* trampoline_gpu.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = trampoline_gpu.entitlements; sourceTree = "<group>"; };
-		7515BB01218B69B20036B6E3 /* ShaderTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ShaderTypes.h; path = ../../Renderer/ShaderTypes.h; sourceTree = "<group>"; };
-		7515BB02218B69B20036B6E3 /* Renderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Renderer.swift; path = ../../Renderer/Renderer.swift; sourceTree = "<group>"; };
-		7515BB03218B69B20036B6E3 /* Shaders.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; name = Shaders.metal; path = ../../Renderer/Shaders.metal; sourceTree = "<group>"; };
-		7515BB04218B69B20036B6E3 /* VideoRecorder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = VideoRecorder.swift; path = ../../Renderer/VideoRecorder.swift; sourceTree = "<group>"; };
+		7515BB01218B69B20036B6E3 /* ShaderTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ShaderTypes.h; sourceTree = "<group>"; };
+		7515BB02218B69B20036B6E3 /* Renderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Renderer.swift; sourceTree = "<group>"; };
+		7515BB03218B69B20036B6E3 /* Shaders.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
+		7515BB04218B69B20036B6E3 /* VideoRecorder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoRecorder.swift; sourceTree = "<group>"; };
+		75C647B9218C2E9500E95715 /* Updater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Updater.swift; sourceTree = "<group>"; };
+		75C647BF218C637B00E95715 /* Data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Data.swift; sourceTree = "<group>"; };
 		75FF1D25218B5B43001627AC /* SimulationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulationView.swift; sourceTree = "<group>"; };
 		75FF1D27218B5BA0001627AC /* Node.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Node.swift; sourceTree = "<group>"; };
 		75FF1D2C218B5FB1001627AC /* Mesh.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mesh.swift; sourceTree = "<group>"; };
@@ -50,7 +54,8 @@
 		750C1F17218A3F2200A49258 = {
 			isa = PBXGroup;
 			children = (
-				7515BB00218B69990036B6E3 /* Renderer */,
+				75C647BE218C636600E95715 /* Data */,
+				75C647BD218C634A00E95715 /* Loop */,
 				75FF1D2B218B5F8A001627AC /* Other */,
 				750C1F22218A3F2200A49258 /* trampoline-gpu */,
 				750C1F21218A3F2200A49258 /* Products */,
@@ -68,6 +73,8 @@
 		750C1F22218A3F2200A49258 /* trampoline-gpu */ = {
 			isa = PBXGroup;
 			children = (
+				7515BB03218B69B20036B6E3 /* Shaders.metal */,
+				7515BB01218B69B20036B6E3 /* ShaderTypes.h */,
 				750C1F25218A3F2200A49258 /* ViewController.swift */,
 				75FF1D25218B5B43001627AC /* SimulationView.swift */,
 				75FF1D27218B5BA0001627AC /* Node.swift */,
@@ -77,15 +84,22 @@
 			path = "trampoline-gpu";
 			sourceTree = "<group>";
 		};
-		7515BB00218B69990036B6E3 /* Renderer */ = {
+		75C647BD218C634A00E95715 /* Loop */ = {
 			isa = PBXGroup;
 			children = (
+				75C647B9218C2E9500E95715 /* Updater.swift */,
 				7515BB02218B69B20036B6E3 /* Renderer.swift */,
-				7515BB03218B69B20036B6E3 /* Shaders.metal */,
-				7515BB01218B69B20036B6E3 /* ShaderTypes.h */,
 				7515BB04218B69B20036B6E3 /* VideoRecorder.swift */,
 			);
-			path = Renderer;
+			path = Loop;
+			sourceTree = "<group>";
+		};
+		75C647BE218C636600E95715 /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				75C647BF218C637B00E95715 /* Data.swift */,
+			);
+			path = Data;
 			sourceTree = "<group>";
 		};
 		75FF1D2B218B5F8A001627AC /* Other */ = {
@@ -170,10 +184,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				75FF1D26218B5B43001627AC /* SimulationView.swift in Sources */,
+				75C647C0218C637B00E95715 /* Data.swift in Sources */,
 				7515BB06218B69B20036B6E3 /* Shaders.metal in Sources */,
 				750C1F26218A3F2200A49258 /* ViewController.swift in Sources */,
 				7515BB07218B69B20036B6E3 /* VideoRecorder.swift in Sources */,
 				750C1F24218A3F2200A49258 /* AppDelegate.swift in Sources */,
+				75C647BA218C2E9500E95715 /* Updater.swift in Sources */,
 				75FF1D28218B5BA0001627AC /* Node.swift in Sources */,
 				7515BB05218B69B20036B6E3 /* Renderer.swift in Sources */,
 				75FF1D2D218B5FB1001627AC /* Mesh.swift in Sources */,
@@ -324,7 +340,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.olvr.trampoline-gpu";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OBJC_BRIDGING_HEADER = ../Renderer/ShaderTypes.h;
+				SWIFT_OBJC_BRIDGING_HEADER = "trampoline-gpu/ShaderTypes.h";
 				SWIFT_VERSION = 4.2;
 			};
 			name = Debug;
@@ -344,7 +360,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.olvr.trampoline-gpu";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OBJC_BRIDGING_HEADER = ../Renderer/ShaderTypes.h;
+				SWIFT_OBJC_BRIDGING_HEADER = "trampoline-gpu/ShaderTypes.h";
 				SWIFT_VERSION = 4.2;
 			};
 			name = Release;

@@ -26,15 +26,11 @@ The program saves force and height of the data particle in a DoubleData instance
 ## To Do
 There is still a lot to do:
 
-- write update model
-- write data class to save data
 - write dataController which fires when it's time to save new data
 - work on framerate 
 - work on usability: show framerate, show button for non real time rendering, show height and force of dataParticle, button to start/stop the model
 - make UI and Unit Tests
 - document program
 	
-
-
 ## Sources 
 Thanks to [this](https://github.com/warrenm/MetalOfflineRecording) repository! Helped a lot. 

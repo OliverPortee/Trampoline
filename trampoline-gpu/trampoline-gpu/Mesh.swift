@@ -34,10 +34,9 @@ struct Spring: _StaticDefaultProperty {
     
     var indices: int2
     var initialLength: Float
-    var springConstant: Float
-    var velConstant: Float
+    var constantsIndices: int2
     
-    static var defaultSelf: Spring { return Spring(indices: int2(0, 1), initialLength: 1, springConstant: 1, velConstant: 1) }
+    static var defaultSelf: Spring { return Spring(indices: int2(0, 1), initialLength: 1, constantsIndices: int2(0, 2)) }
 
 }
 
@@ -50,16 +49,19 @@ struct Constants {
     static let particleStride = MemoryLayout<Particle>.stride
     static let springStride = MemoryLayout<Spring>.stride
     static let vertexInStride = MemoryLayout<VertexIn>.stride
+    static let constantStride = MemoryLayout<Float>.stride
 }
 
 
 class Mesh: Node, NonRealTimeRenderable {
     
+    
     var otherRenderingBuffer: MTLBuffer?
     var otherVertexCount: Int { return (otherRenderingBuffer?.length ?? 0) / Constants.vertexInStride  }
   
-    private(set) var particleBuffer: MTLBuffer // [Particle]
-    private(set) var springBuffer: MTLBuffer // [Spring]
+    private(set) var particleBuffer: MTLBuffer! // [Particle]
+    private(set) var springBuffer: MTLBuffer! // [Spring]
+    private(set) var constantsBuffer: MTLBuffer! // [Float]
     
     var vertexCount: Int { return (springBuffer.length * 2) / Constants.springStride }
     var springCount: Int { return springBuffer.length / Constants.springStride }
@@ -79,13 +81,17 @@ class Mesh: Node, NonRealTimeRenderable {
     }
 
 
-    init(device: MTLDevice, projectionMatrix: GLKMatrix4, parentModelMatrix: GLKMatrix4, particles: [Particle], springs: [Spring], updateHandler: @escaping (_ dt: Float) -> Void) {
-        
-        particleBuffer = device.makeBuffer(bytes: particles, length: particles.count * Constants.particleStride, options: [])!
-        springBuffer = device.makeBuffer(bytes: springs, length: springs.count * Constants.springStride, options: [])!
+    init(device: MTLDevice, projectionMatrix: GLKMatrix4, parentModelMatrix: GLKMatrix4, updateHandler: @escaping (_ dt: Float) -> Void) {
+    
         self.updateHandler = updateHandler
 
         super.init(device: device, projectionMatrix: projectionMatrix, parentModelMatrix: parentModelMatrix)
+    }
+    
+    func initiateBuffers(particles: [Particle], springs: [Spring], constants: [Float]) {
+        particleBuffer = device.makeBuffer(bytes: particles, length: particles.count * Constants.particleStride, options: [])!
+        springBuffer = device.makeBuffer(bytes: springs, length: springs.count * Constants.springStride, options: [])!
+        constantsBuffer = device.makeBuffer(bytes: constants, length: constants.count * Constants.constantStride, options: [])!
     }
     
     
@@ -95,14 +101,20 @@ class Mesh: Node, NonRealTimeRenderable {
 class CircularTrampolineMesh: Mesh {
     
     var parameters: MeshParameters
-    let middleParticleIndex: Int
+    var middleParticleIndex: Int!
     
     init(device: MTLDevice, projectionMatrix: GLKMatrix4, parentModelMatrix: GLKMatrix4, parameters: MeshParameters, updateHandler: @escaping (_ dt: Float) -> Void) {
         self.parameters = parameters
-        let (particles, springs, middleParticleIndex) = CircularTrampolineMesh.makeCircularJumpingSheet(parameters: parameters)
-        self.middleParticleIndex = middleParticleIndex
-        super.init(device: device, projectionMatrix: projectionMatrix, parentModelMatrix: parentModelMatrix, particles: particles, springs: springs, updateHandler: updateHandler)
+        super.init(device: device, projectionMatrix: projectionMatrix, parentModelMatrix: parentModelMatrix, updateHandler: updateHandler)
         initOtherRenderingBuffer()
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            let (particles, springs, constants, middleParticleIndex) = CircularTrampolineMesh.makeCircularJumpingSheet(parameters: parameters)
+            self.middleParticleIndex = middleParticleIndex
+            self.initiateBuffers(particles: particles, springs: springs, constants: constants)
+        }
+        
+
     }
     
     func initOtherRenderingBuffer() {
@@ -223,7 +235,7 @@ extension CircularTrampolineMesh {
     }
 
     
-    static func makeCircularJumpingSheet(parameters: MeshParameters) -> ([Particle], [Spring], Int) {
+    static func makeCircularJumpingSheet(parameters: MeshParameters) -> ([Particle], [Spring], [Float], Int) {
         
 
         
@@ -409,12 +421,21 @@ extension CircularTrampolineMesh {
         connections.removeAll { $0.isValidSpring == false }
         
         var springs = [Spring]()
+        let constantsMaxIndex = [ConstantsIndex.innerSpringConstantsBuffer.rawValue, ConstantsIndex.innerVelConstantsBuffer.rawValue, ConstantsIndex.outerSpringConstant.rawValue, ConstantsIndex.outerVelConstant.rawValue].max()!
+        var constants = [Float](repeating: 0, count: constantsMaxIndex + 1)
+        constants[ConstantsIndex.innerSpringConstantsBuffer.rawValue] = parameters.innerSpringConstant
+        constants[ConstantsIndex.innerVelConstantsBuffer.rawValue] = parameters.innerVelConstant
+        constants[ConstantsIndex.outerSpringConstant.rawValue] = parameters.outerSpringConstant
+        constants[ConstantsIndex.outerVelConstant.rawValue] = parameters.outerVelConstant
         
         for spring in connections {
             let p1Index = Int32(helperParticles.firstIndex { $0 == spring.p1! }!)
             let p2Index = Int32(helperParticles.firstIndex { $0 == spring.p2! }!)
 //            springs.append(Spring(p1Index: p1Index, p2Index: p2Index, springConstant: spring.springConstant, velConstant: spring.velConstant, initialLength: spring.initialLength))
-            springs.append(Spring(indices: int2(p1Index, p2Index), initialLength: spring.initialLength, springConstant: spring.springConstant, velConstant: spring.velConstant))
+            let springConstantIndex = Int32(constants.firstIndex { $0 == spring.springConstant }!)
+            let velConstantIndex = Int32(constants.firstIndex { $0 == spring.velConstant }!)
+            
+            springs.append(Spring(indices: int2(p1Index, p2Index), initialLength: spring.initialLength, constantsIndices: int2(springConstantIndex, velConstantIndex)))
         }
         
         
@@ -431,7 +452,7 @@ extension CircularTrampolineMesh {
         
         
         print("completed makeCircularJumpingSheet")
-        return (particles, springs, middleParticleIndex)
+        return (particles, springs, constants, middleParticleIndex)
     }
     
 }

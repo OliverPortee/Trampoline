@@ -27,8 +27,7 @@ typedef struct
 {
     int2 indices;
     float initialLength;
-    float springConstant;
-    float velConstant;
+    int2 constantsIndices;
 } Spring;
 
 
@@ -45,6 +44,7 @@ typedef struct {
 
 kernel void spring_update(device Particle *particles [[ buffer(ParticleBufferIndex) ]],
                           constant Spring *springs [[ buffer(SpringBufferIndex) ]],
+                          constant float *constants [[ buffer(ConstantBufferIndex) ]],
                           uint id [[ thread_position_in_grid ]])
 {
     Spring spring = springs[id];
@@ -55,20 +55,22 @@ kernel void spring_update(device Particle *particles [[ buffer(ParticleBufferInd
     float current_length = length(d_pos);
     
     if (current_length != 0.0) {
-        float3 force_at_p1 = normalize(d_pos) * spring.springConstant * (current_length - spring.initialLength) + spring.velConstant * (p2.vel - p1.vel);
+        float springConstant = constants[spring.constantsIndices.x];
+        float velConstant = constants[spring.constantsIndices.y];
+        float3 force_at_p1 = normalize(d_pos) * springConstant * (current_length - spring.initialLength) + velConstant * (p2.vel - p1.vel);
         particles[spring.indices.x].force += force_at_p1;
         particles[spring.indices.y].force += -force_at_p1;
     }
 }
 
 kernel void particle_update(device Particle *particles [[ buffer(ParticleBufferIndex)]],
-                            constant float *constants [[ buffer(ConstantsBufferIndex) ]],
+                            constant float *physicalUniforms [[ buffer(PhysicalUniformsBufferIndex) ]],
                             uint id [[ thread_position_in_grid ]])
 {
     if (!particles[id].isLocked) {
-        float3 gravity = float3(0, constants[1], 0);
-        particles[id].vel += ((particles[id].force / particles[id].mass) + gravity) * constants[0];
-        particles[id].pos += particles[id].vel * constants[0];
+        float3 gravity = float3(0, physicalUniforms[1], 0);
+        particles[id].vel += ((particles[id].force / particles[id].mass) + gravity) * physicalUniforms[0];
+        particles[id].pos += particles[id].vel * physicalUniforms[0];
     }
     particles[id].force = float3(0, 0, 0);
     

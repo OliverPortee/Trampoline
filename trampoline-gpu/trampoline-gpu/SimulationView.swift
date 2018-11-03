@@ -14,38 +14,58 @@ class SimulationView: MTKView {
     var mouseDragSensitivity: Float = 0.004
     var dataController: DataController?
     
+
+    enum State {
+        case loadingModel, notRunning, running
+    }
+    var state: State!
+    
+    
     required init(coder: NSCoder) {
+
 
         super.init(coder: coder)
 
         // TODO: set FrameRate
         
-        self.currentMeshParameters = MeshParameters(r1: 3.3 / 2.0,
-                                                    r2: 2.62 / 2.0,
-                                                    fineness: 0.3,
-                                                    n_outerSprings: 72,
-                                                    innerSpringConstant: 1,
-                                                    innerVelConstant: 0.1,
-                                                    outerSpringConstant: 2,
-                                                    outerVelConstant: 0.1,
-                                                    outerSpringLength: 0.17)
         
+        self.state = .loadingModel
+
+            self.currentMeshParameters = MeshParameters(r1: 3.3 / 2.0,
+                                                        r2: 2.62 / 2.0,
+                                                        fineness: 0.02,
+                                                        n_outerSprings: 72,
+                                                        innerSpringConstant: 10,
+                                                        innerVelConstant: 0.5,
+                                                        outerSpringConstant: 2,
+                                                        outerVelConstant: 1,
+                                                        outerSpringLength: 0.17)
+            
         
-        let projectionMatrix = GLKMatrix4MakePerspective(85 * Float.pi / 180, frame.aspectRatio, 0.01, 100)
+        let projectionMatrix = GLKMatrix4MakePerspective(85 * Float.pi / 180, self.frame.aspectRatio, 0.01, 100)
         var parentModelMatrix = GLKMatrix4Identity; parentModelMatrix = GLKMatrix4Translate(parentModelMatrix, 0, 0, -3); parentModelMatrix = GLKMatrix4RotateX(parentModelMatrix, 20.0 * Float.pi / 180)
         
         self.device = MTLCreateSystemDefaultDevice()!
-        let commandQueue = device!.makeCommandQueue()!
-        self.renderer = Renderer(device: device!, commandQueue: commandQueue, vertexFunctionName: "particle_vertex_shader", fragmentFunctionName: "fragment_shader", primitiveType: .line, otherFragmentFunctionName: "basic_vertex_shader")
-        self.updater = MeshUpdater(device: device!, commandQueue: commandQueue, springFunctionName: "spring_update", particleFunctionName: "particle_update")
-        
-        self.mesh = CircularTrampolineMesh(device: device!, projectionMatrix: projectionMatrix, parentModelMatrix: parentModelMatrix, parameters: currentMeshParameters!, updateHandler: {(_ dt: Float) in self.updater.update(dt: dt, mesh: self.mesh)})
-        self.dataController = DataController()
-        dataController!.dataParticleIndex = mesh.middleParticleIndex
-        dataController!.delegate = mesh 
+        let commandQueue = self.device!.makeCommandQueue()!
+    
+        self.renderer = Renderer(device: self.device!, commandQueue: commandQueue, vertexFunctionName: "particle_vertex_shader", fragmentFunctionName: "fragment_shader", primitiveType: .line, otherFragmentFunctionName: "basic_vertex_shader")
+        self.updater = MeshUpdater(device: self.device!, commandQueue: commandQueue, springFunctionName: "spring_update", particleFunctionName: "particle_update")
         
         
-        lastFrameTime = NSDate()
+        DispatchQueue.global(qos: .userInitiated).async {
+
+            self.mesh = CircularTrampolineMesh(device: self.device!, projectionMatrix: projectionMatrix, parentModelMatrix: parentModelMatrix, parameters: self.currentMeshParameters!, updateHandler: {(_ dt: Float) in self.updater.update(dt: dt, mesh: self.mesh)})
+            self.dataController = DataController()
+            self.dataController!.dataParticleIndex = self.mesh.middleParticleIndex
+            self.dataController!.delegate = self.mesh
+            
+            
+            self.lastFrameTime = NSDate()
+            
+            self.state = .notRunning
+        }
+        
+
 //        renderer.renderMovie(size: self.frame.size, seconds: 10, deltaTime: 1.0 / 120.0, renderObject: mesh, url: URL(fileURLWithPath: "movie.mp4"))
        
     }

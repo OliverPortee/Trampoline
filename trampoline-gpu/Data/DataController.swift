@@ -36,19 +36,27 @@ class DataController: FloatData2 {
         case shouldMoveDown
         case shouldToggleIsLocked
         case shouldEndDataSet
+        case shouldSetInnerSpringConstant(value: Float)
+        case shouldSetInnerVelConstant(value: Float)
+        case shouldSetOuterSpringConstant(value: Float)
+        case shouldSetOuterVelConstant(value: Float)
     }
     
     
     func update() {
-        for index in stride(from: tasks.count - 1, through: 0, by: -1) {
-            switch tasks[index] {
+        for _ in 0..<tasks.count {
+            switch tasks[0] {
             case .shouldCollectData: collectData()
             case .shouldMoveUp: moveDataParticleUp()
             case .shouldMoveDown: moveDataParticleDown()
             case .shouldToggleIsLocked: toggleLock()
             case .shouldEndDataSet: endDataSet()
+            case .shouldSetInnerSpringConstant(let value): setInnerSpringConstant(value: value)
+            case .shouldSetInnerVelConstant(let value): setInnerVelConstant(value: value)
+            case .shouldSetOuterSpringConstant(let value): setOuterSpringConstant(value: value)
+            case .shouldSetOuterVelConstant(let value): setOuterVelConstant(value: value)
             }
-            tasks.remove(at: index)
+            tasks.remove(at: 0)
         }
         
         
@@ -133,6 +141,33 @@ class DataController: FloatData2 {
         return result
     }
     
+    func setInnerSpringConstant(value: Float) {
+        if let mesh = self.delegate {
+            let byte = Constants.constantStride * ConstantsIndex.innerSpringConstantsBuffer.rawValue
+            mesh.constantsBuffer.modifyInstances(atByte: byte, newValues: [value])
+        }
+    }
+    
+    func setInnerVelConstant(value: Float) {
+        if let mesh = self.delegate {
+            let byte = Constants.constantStride * ConstantsIndex.innerVelConstantsBuffer.rawValue
+            mesh.constantsBuffer.modifyInstances(atByte: byte, newValues: [value])
+        }
+    }
+    
+    func setOuterSpringConstant(value: Float) {
+        if let mesh = self.delegate {
+            let byte = Constants.constantStride * ConstantsIndex.outerSpringConstant.rawValue
+            mesh.constantsBuffer.modifyInstances(atByte: byte, newValues: [value])
+        }
+    }
+    
+    func setOuterVelConstant(value: Float) {
+        if let mesh = self.delegate {
+            let byte = Constants.constantStride * ConstantsIndex.outerVelConstant.rawValue
+            mesh.constantsBuffer.modifyInstances(atByte: byte, newValues: [value])
+        }
+    }
     
 }
 

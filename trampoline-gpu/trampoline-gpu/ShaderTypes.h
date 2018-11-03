@@ -17,10 +17,18 @@ typedef NS_ENUM(NSInteger, BufferIndex)
 {
     ParticleBufferIndex = 0,
     SpringBufferIndex = 1,
-    OtherRenderingBufferIndex = 4,
     UniformsBufferIndex = 2,
-    ConstantsBufferIndex = 3
+    ConstantBufferIndex = 3,
+    PhysicalUniformsBufferIndex = 4,
+    OtherRenderingBufferIndex = 5
+};
 
+typedef NS_ENUM(NSInteger, ConstantsIndex)
+{
+    innerSpringConstantsBuffer = 0,
+    innerVelConstantsBuffer = 1,
+    outerSpringConstant = 2,
+    outerVelConstant = 3
 };
 
 

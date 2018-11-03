@@ -78,9 +78,9 @@
 				7515BB03218B69B20036B6E3 /* Shaders.metal */,
 				7515BB01218B69B20036B6E3 /* ShaderTypes.h */,
 				750C1F25218A3F2200A49258 /* ViewController.swift */,
-				75FF1D25218B5B43001627AC /* SimulationView.swift */,
 				75FF1D27218B5BA0001627AC /* Node.swift */,
 				75FF1D2C218B5FB1001627AC /* Mesh.swift */,
+				75FF1D25218B5B43001627AC /* SimulationView.swift */,
 				750C1F29218A3F2200A49258 /* Main.storyboard */,
 			);
 			path = "trampoline-gpu";
@@ -148,6 +148,11 @@
 				TargetAttributes = {
 					750C1F1F218A3F2200A49258 = {
 						CreatedOnToolsVersion = 10.1;
+						SystemCapabilities = {
+							com.apple.Sandbox = {
+								enabled = 0;
+							};
+						};
 					};
 				};
 			};
@@ -333,7 +338,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = Other/trampoline_gpu.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = T9XELW45SF;
@@ -353,7 +357,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = Other/trampoline_gpu.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = T9XELW45SF;

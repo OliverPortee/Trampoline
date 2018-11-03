@@ -1,5 +1,5 @@
 
-
+import Cocoa
 
 class DataController: FloatData2 {
     
@@ -8,13 +8,14 @@ class DataController: FloatData2 {
     var delegate: CircularTrampolineMesh?
     var dataParticleIndex: Int?
     var deltaY: Float = 0.2
-    var tasks = [Tasks]()
+    var tasks = [Task]()
     var desiredDataParticlePosition: Float = 0
     var meshSensitivity: Float = 1
     var averageCount = 20
     var dataParticleYMinimum: Float = -5
     var shouldControlAutonomously: Bool = false
     var currentDataParticleIsLocked: Bool = false
+    
     
     var dataParticle: Particle? {
         if let mesh = self.delegate, let index = dataParticleIndex {
@@ -30,7 +31,7 @@ class DataController: FloatData2 {
     }
     
     
-    enum Tasks {
+    enum Task {
         case shouldCollectData
         case shouldMoveUp
         case shouldMoveDown
@@ -42,6 +43,10 @@ class DataController: FloatData2 {
         case shouldSetOuterVelConstant(value: Float)
     }
     
+    func addTask(_ task: Task) {
+        tasks.append(task)
+        shouldControlAutonomously = false 
+    }
     
     func update() {
         for _ in 0..<tasks.count {
@@ -59,13 +64,15 @@ class DataController: FloatData2 {
             tasks.remove(at: 0)
         }
         
-        
         if shouldControlAutonomously {
             if currentDataParticleIsLocked == false { toggleLock() }
             controlAutonomously() }
         
     }
     
+    func reset() {
+        tasks.removeAll()
+    }
     
     func velAverageIsSmallEnough() -> Bool {
         if let mesh = delegate {
@@ -129,14 +136,16 @@ class DataController: FloatData2 {
         for (x, y) in averagedPairs {
             result += "\n\(x) \(y)"
         }
-        result.writeToEndOfFile(basePath: basePath, folderPath: folderPath, fileName: fileName)
+        print(result)
+        print(result.writeToEndOfFile(basePath: basePath, folderPath: folderPath, fileName: fileName))
     }
     
     static func getDescriptionString(parameters: MeshParameters?) -> String {
         let dateFormatter = DateFormatter()
-        dateFormatter.dateStyle = .full
+        dateFormatter.dateStyle = .short
+        dateFormatter.timeStyle = .medium
         let dateString = dateFormatter.string(from: Date())
-        var result = "# \(dateString)"
+        var result = "\n# \(dateString)"
         if let parameterString = parameters?.description { result += "; " + parameterString }
         return result
     }
@@ -178,7 +187,7 @@ extension String {
         guard var baseURL = fm.urls(for: basePath, in: .userDomainMask).first else { return false }
         baseURL.appendPathComponent(folderPath)
         do { try fm.createDirectory(at: baseURL, withIntermediateDirectories: true, attributes: nil) }
-        catch { return false }
+        catch let error { print(error); return false }
         let fileURL = baseURL.appendingPathComponent(fileName)
         if !fm.fileExists(atPath: fileURL.path) {
             fm.createFile(atPath: fileURL.path, contents: nil, attributes: nil)

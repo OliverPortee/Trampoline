@@ -13,73 +13,108 @@ class SimulationView: MTKView {
     var lastFrameTime: NSDate!
     var mouseDragSensitivity: Float = 0.004
     var dataController: DataController?
+    var shouldRun = false
+    var initialValues: ([Particle], [Spring], [Float])!
+    var desiredVirtualTime: Float? = 0.001
     
 
     enum State {
-        case loadingModel, notRunning, running
+        case `init`, parametersSet, loadingModel, readyToRun, running
     }
-    var state: State!
-    
+    var state: State! { didSet{ print("state changed to: \(state!)") } }
     
     required init(coder: NSCoder) {
-
-
         super.init(coder: coder)
-
-        // TODO: set FrameRate
-        
-        
-        self.state = .loadingModel
-
-            self.currentMeshParameters = MeshParameters(r1: 3.3 / 2.0,
-                                                        r2: 2.62 / 2.0,
-                                                        fineness: 0.02,
-                                                        n_outerSprings: 72,
-                                                        innerSpringConstant: 10,
-                                                        innerVelConstant: 0.5,
-                                                        outerSpringConstant: 2,
-                                                        outerVelConstant: 1,
-                                                        outerSpringLength: 0.17)
-            
-        
+        self.state = .init
+        self.device = MTLCreateSystemDefaultDevice()!
+        let library = device!.makeDefaultLibrary()!
+        let commandQueue = self.device!.makeCommandQueue()!
+        self.renderer = Renderer(device: self.device!, commandQueue: commandQueue)
+        self.updater = MeshUpdater(device: self.device!, library: library, commandQueue: commandQueue, springFunctionName: "spring_update", particleFunctionName: "particle_update")
         let projectionMatrix = GLKMatrix4MakePerspective(85 * Float.pi / 180, self.frame.aspectRatio, 0.01, 100)
         var parentModelMatrix = GLKMatrix4Identity; parentModelMatrix = GLKMatrix4Translate(parentModelMatrix, 0, 0, -3); parentModelMatrix = GLKMatrix4RotateX(parentModelMatrix, 20.0 * Float.pi / 180)
-        
-        self.device = MTLCreateSystemDefaultDevice()!
-        let commandQueue = self.device!.makeCommandQueue()!
-    
-        self.renderer = Renderer(device: self.device!, commandQueue: commandQueue, vertexFunctionName: "particle_vertex_shader", fragmentFunctionName: "fragment_shader", primitiveType: .line, otherFragmentFunctionName: "basic_vertex_shader")
-        self.updater = MeshUpdater(device: self.device!, commandQueue: commandQueue, springFunctionName: "spring_update", particleFunctionName: "particle_update")
-        
-        
-        DispatchQueue.global(qos: .userInitiated).async {
+        self.mesh = CircularTrampolineMesh(device: self.device!, projectionMatrix: projectionMatrix, parentModelMatrix: parentModelMatrix, updateHandler: {(_ dt: Float) in self.updater.update(dt: dt, mesh: self.mesh)})
+        self.lastFrameTime = NSDate()
 
-            self.mesh = CircularTrampolineMesh(device: self.device!, projectionMatrix: projectionMatrix, parentModelMatrix: parentModelMatrix, parameters: self.currentMeshParameters!, updateHandler: {(_ dt: Float) in self.updater.update(dt: dt, mesh: self.mesh)})
+    }
+    
+    func setMeshParamters(parameters: MeshParameters) {
+        mesh.initParameters(parameters)
+        self.state = .parametersSet
+    }
+    
+    
+    func loadModelInBackground(parameters: MeshParameters) {
+        self.state = .loadingModel
+        DispatchQueue.global(qos: .userInitiated).async {
+            self.initialValues = self.mesh.makeCircularJumpingSheet(parameters: parameters)
             self.dataController = DataController()
             self.dataController!.dataParticleIndex = self.mesh.middleParticleIndex
             self.dataController!.delegate = self.mesh
-            
-            
-            self.lastFrameTime = NSDate()
-            
-            self.state = .notRunning
+            self.updater.dataController = self.dataController
+            self.state = .readyToRun
         }
-        
-
-//        renderer.renderMovie(size: self.frame.size, seconds: 10, deltaTime: 1.0 / 120.0, renderObject: mesh, url: URL(fileURLWithPath: "movie.mp4"))
-       
     }
     
-    override func draw(_ dirtyRect: NSRect) {
-        let dt = Float(-lastFrameTime.timeIntervalSinceNow)
-        self.lastFrameTime = NSDate()
-        guard currentDrawable != nil else { return }
-        self.mesh.updateHandler(dt)
-        renderer.renderFrame(renderObject: self.mesh, drawable: currentDrawable!)
-        
-        
-        
+    func reloadModelInBackground() {
+        self.state = .loadingModel
+        DispatchQueue.global(qos: .userInitiated).async {
+            self.mesh.initiateBuffers(particles: self.initialValues.0, springs: self.initialValues.1, constants: self.initialValues.2)
+            self.dataController?.reset()
+            self.lastFrameTime = NSDate()
+            self.state = .readyToRun
+        }
     }
+
+    private func updateTime() -> Float {
+        let realDeltaTime = Float(-lastFrameTime.timeIntervalSinceNow)
+        self.lastFrameTime = NSDate()
+        if let virtualDeltaTime = desiredVirtualTime { return virtualDeltaTime }
+        return realDeltaTime
+
+    }
+    
+    
+    override func draw(_ dirtyRect: NSRect) {
+        let dt = updateTime()
+        
+        guard currentDrawable != nil else { return }
+        
+        if shouldRun == true && state == .readyToRun {
+            state = .running
+        } else if shouldRun == false && state == .running {
+            state = .readyToRun
+        }
+        
+        switch self.state! {
+        case .`init`:
+            break
+        case .parametersSet, .loadingModel:
+            renderer.renderFrame(renderObject: mesh, drawable: currentDrawable!, renderOnlyOtherRenderObjects: true)
+        case .readyToRun:
+            renderer.renderFrame(renderObject: mesh, drawable: currentDrawable!, renderOnlyOtherRenderObjects: false)
+        case .running:
+            self.mesh.updateHandler(dt)
+            renderer.renderFrame(renderObject: mesh, drawable: currentDrawable!, renderOnlyOtherRenderObjects: false)
+        }
+    }
+    
+    func renderMovie() {
+        print("not implemented yet")
+    }
+    
+    func resetSim() {
+        if state == .readyToRun || state == .running {
+            reloadModelInBackground()
+            shouldRun = false
+        }
+    }
+    
+    
+}
+
+
+extension SimulationView {
     
     
     override func mouseDragged(with event: NSEvent) {
@@ -92,6 +127,8 @@ class SimulationView: MTKView {
     override func resize(withOldSuperviewSize oldSize: NSSize) {
         mesh.projectionMatrix = float4x4(glkMatrix: GLKMatrix4MakePerspective(85 * Float.pi / 180, frame.aspectRatio, 0.01, 100))
     }
+    
+    
     
     
     

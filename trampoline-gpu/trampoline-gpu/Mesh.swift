@@ -52,13 +52,52 @@ struct Constants {
     static let constantStride = MemoryLayout<Float>.stride
 }
 
+class HelperGraphics: Renderable {
+    var vertexCount: Int { return self.vertexBuffer.length / Constants.vertexInStride }
+    var vertexBuffer: MTLBuffer!
+    var setBufferHandlerWhenRendering: (inout MTLRenderCommandEncoder) -> Void {
+        return { (renderCommandEncoder) in
+            renderCommandEncoder.setVertexBuffer(self.vertexBuffer, offset: 0, index: BufferIndex.OtherRenderingBufferIndex.rawValue)
+        }
+    }
+    
+    var primitiveType: MTLPrimitiveType = .line
+    
+    var renderPipelineState: MTLRenderPipelineState
+    
+
+    init(fromParameters parameters: MeshParameters, device: MTLDevice, smoothness: Float = 10) {
+        var vertexArray = [VertexIn]()
+        let radius = parameters.r1
+        for angle in stride(from: 0, through: 2 * Float.pi + 1.0 / smoothness, by: 1.0 / smoothness) {
+            let x = radius * sin(angle)
+            let z = radius * cos(angle)
+            let vertexIn = VertexIn(position: float3(x: x, y: 0, z: z), color: float3(0, 0.5, 1))
+            vertexArray.append(vertexIn)
+            if angle != 0 { vertexArray.append(vertexIn) }
+        }
+        vertexArray.removeLast()
+        let library = device.makeDefaultLibrary()!
+        let vertexFuntion = library.makeFunction(name: "basic_vertex_shader")!
+        let fragmentFunction = library.makeFunction(name: "fragment_shader")!
+        let renderPipelineDescriptor = MTLRenderPipelineDescriptor()
+        renderPipelineDescriptor.vertexFunction = vertexFuntion
+        renderPipelineDescriptor.fragmentFunction = fragmentFunction
+        renderPipelineDescriptor.colorAttachments[0].pixelFormat = .bgra8Unorm
+        self.renderPipelineState = try! device.makeRenderPipelineState(descriptor: renderPipelineDescriptor)
+        self.vertexBuffer = device.makeBuffer(bytes: vertexArray, length: vertexArray.count * Constants.vertexInStride, options: [])!
+        }
+    
+}
+
 
 class Mesh: Node, NonRealTimeRenderable {
-    
-    
-    var otherRenderingBuffer: MTLBuffer?
-    var otherVertexCount: Int { return (otherRenderingBuffer?.length ?? 0) / Constants.vertexInStride  }
-  
+    var primitiveType: MTLPrimitiveType = .line
+
+    var otherRendering: [Renderable] = [Renderable]()
+
+    var renderPipelineState: MTLRenderPipelineState
+
     private(set) var particleBuffer: MTLBuffer! // [Particle]
     private(set) var springBuffer: MTLBuffer! // [Spring]
     private(set) var constantsBuffer: MTLBuffer! // [Float]
@@ -73,7 +112,7 @@ class Mesh: Node, NonRealTimeRenderable {
     
     var updateHandler: (_ dt: Float) -> Void
     
-    var setBufferHandler: (inout MTLRenderCommandEncoder) -> Void {
+    var setBufferHandlerWhenRendering: (inout MTLRenderCommandEncoder) -> Void {
         return {(_ renderEncoder) in
             renderEncoder.setVertexBuffer(self.particleBuffer, offset: 0, index: BufferIndex.ParticleBufferIndex.rawValue)
             renderEncoder.setVertexBuffer(self.springBuffer, offset: 0, index: BufferIndex.SpringBufferIndex.rawValue)
@@ -82,9 +121,15 @@ class Mesh: Node, NonRealTimeRenderable {
 
 
     init(device: MTLDevice, projectionMatrix: GLKMatrix4, parentModelMatrix: GLKMatrix4, updateHandler: @escaping (_ dt: Float) -> Void) {
-    
         self.updateHandler = updateHandler
-
+        let library = device.makeDefaultLibrary()!
+        let vertexFuntion = library.makeFunction(name: "particle_vertex_shader")!
+        let fragmentFunction = library.makeFunction(name: "fragment_shader")!
+        let renderPipelineDescriptor = MTLRenderPipelineDescriptor()
+        renderPipelineDescriptor.vertexFunction = vertexFuntion
+        renderPipelineDescriptor.fragmentFunction = fragmentFunction
+        renderPipelineDescriptor.colorAttachments[0].pixelFormat = .bgra8Unorm
+        self.renderPipelineState = try! device.makeRenderPipelineState(descriptor: renderPipelineDescriptor)
         super.init(device: device, projectionMatrix: projectionMatrix, parentModelMatrix: parentModelMatrix)
     }
     
@@ -100,40 +145,17 @@ class Mesh: Node, NonRealTimeRenderable {
 
 class CircularTrampolineMesh: Mesh {
     
-    var parameters: MeshParameters
-    var middleParticleIndex: Int!
+    private(set) var parameters: MeshParameters!
+    private(set) var middleParticleIndex: Int!
     
-    init(device: MTLDevice, projectionMatrix: GLKMatrix4, parentModelMatrix: GLKMatrix4, parameters: MeshParameters, updateHandler: @escaping (_ dt: Float) -> Void) {
-        self.parameters = parameters
+    override init(device: MTLDevice, projectionMatrix: GLKMatrix4, parentModelMatrix: GLKMatrix4, updateHandler: @escaping (_ dt: Float) -> Void) {
         super.init(device: device, projectionMatrix: projectionMatrix, parentModelMatrix: parentModelMatrix, updateHandler: updateHandler)
-        initOtherRenderingBuffer()
-        
-        DispatchQueue.global(qos: .userInitiated).async {
-            let (particles, springs, constants, middleParticleIndex) = CircularTrampolineMesh.makeCircularJumpingSheet(parameters: parameters)
-            self.middleParticleIndex = middleParticleIndex
-            self.initiateBuffers(particles: particles, springs: springs, constants: constants)
-        }
-        
-
     }
     
-    func initOtherRenderingBuffer() {
-        var vertexArray = [VertexIn]()
-        let smoothness: Float = 10.0
-        let radius = parameters.r1
-        
-        for angle in stride(from: 0, through: 2 * Float.pi + 1.0 / smoothness, by: 1.0 / smoothness) {
-            let x = radius * sin(angle)
-            let z = radius * cos(angle)
-            let vertexIn = VertexIn(position: float3(x: x, y: 0, z: z), color: float3(0, 0.5, 1))
-            vertexArray.append(vertexIn)
-            if angle != 0 { vertexArray.append(vertexIn) }
-        }
-        vertexArray.removeLast()
-        self.otherRenderingBuffer = self.device.makeBuffer(bytes: vertexArray, length: vertexArray.count * Constants.vertexInStride, options: [])
+    func initParameters(_ parameters: MeshParameters) {
+        self.parameters = parameters
+        self.otherRendering.append(HelperGraphics(fromParameters: parameters, device: device))
     }
-    
-    
 }
 
 
@@ -235,7 +257,7 @@ extension CircularTrampolineMesh {
     }
 
     
-    static func makeCircularJumpingSheet(parameters: MeshParameters) -> ([Particle], [Spring], [Float], Int) {
+    func makeCircularJumpingSheet(parameters: MeshParameters) -> ([Particle], [Spring], [Float]) {
         
 
         
@@ -428,15 +450,18 @@ extension CircularTrampolineMesh {
         constants[ConstantsIndex.outerSpringConstant.rawValue] = parameters.outerSpringConstant
         constants[ConstantsIndex.outerVelConstant.rawValue] = parameters.outerVelConstant
         
-        for spring in connections {
+        for index in connections.indices {
+            let spring = connections[index]
+            print(Float(index) / Float(connections.count))
             let p1Index = Int32(helperParticles.firstIndex { $0 == spring.p1! }!)
             let p2Index = Int32(helperParticles.firstIndex { $0 == spring.p2! }!)
 //            springs.append(Spring(p1Index: p1Index, p2Index: p2Index, springConstant: spring.springConstant, velConstant: spring.velConstant, initialLength: spring.initialLength))
             let springConstantIndex = Int32(constants.firstIndex { $0 == spring.springConstant }!)
             let velConstantIndex = Int32(constants.firstIndex { $0 == spring.velConstant }!)
-            
+
             springs.append(Spring(indices: int2(p1Index, p2Index), initialLength: spring.initialLength, constantsIndices: int2(springConstantIndex, velConstantIndex)))
         }
+        
         
         
         var particles = [Particle]()
@@ -449,10 +474,12 @@ extension CircularTrampolineMesh {
             particles.append(Particle(pos: hp.pos, vel: hp.vel, force: hp.force, mass: hp.mass, isLocked: hp.isLocked))
         }
         
-        
-        
         print("completed makeCircularJumpingSheet")
-        return (particles, springs, constants, middleParticleIndex)
+        
+        self.initiateBuffers(particles: particles, springs: springs, constants: constants)
+        self.middleParticleIndex = middleParticleIndex
+        
+        return (particles, springs, constants)
     }
     
 }

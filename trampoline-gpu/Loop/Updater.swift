@@ -16,10 +16,9 @@ class MeshUpdater: NSObject {
     
     
     
-    init(device: MTLDevice, commandQueue: MTLCommandQueue, springFunctionName: String, particleFunctionName: String) {
+    init(device: MTLDevice, library: MTLLibrary, commandQueue: MTLCommandQueue, springFunctionName: String, particleFunctionName: String) {
         self.device = device
         self.commandQueue = commandQueue
-        let library = device.makeDefaultLibrary()!
         let springFunction = library.makeFunction(name: springFunctionName)!
         let particleFunction = library.makeFunction(name: particleFunctionName)!
         self.springPipelineState = try! device.makeComputePipelineState(function: springFunction)

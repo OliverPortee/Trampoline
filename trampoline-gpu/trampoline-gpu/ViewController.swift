@@ -23,7 +23,7 @@ class ViewController: NSViewController {
         
         let parameters = MeshParameters(r1: 3.3 / 2.0,
                                         r2: 2.62 / 2.0,
-                                        fineness: 0.2,
+                                        fineness: 0.05,
                                         n_outerSprings: 72,
                                         innerSpringConstant: 1,
                                         innerVelConstant: 0.5,
@@ -38,6 +38,9 @@ class ViewController: NSViewController {
     
     @IBOutlet weak var realTimeCheckBox: NSButtonCell!
     @IBOutlet weak var timeSlider: NSSliderCell!
+    @IBOutlet weak var heightLbl: NSTextField!
+    @IBOutlet weak var forceLbl: NSTextField!
+    
     
     
     @IBAction func deltaHeightSliderChanged(_ sender: NSSliderCell) { simView.dataController?.deltaY = sender.floatValue }
@@ -60,8 +63,9 @@ class ViewController: NSViewController {
     @IBAction func outerVelConstantSliderChanged(_ sender: NSSliderCell) {
         simView.dataController?.addTask(.shouldSetOuterVelConstant(value: sender.floatValue))
     }
-    
-
+    @IBAction func gravitySliderChanged(_ sender: NSSliderCell) {
+        simView.updater.gravity = sender.floatValue
+    }
     
     @IBAction func renderMovieBtn(_ sender: NSButton) { simView.renderMovie() }
     @IBAction func startSimBtn(_ sender: NSButton) { simView.shouldRun = true }
@@ -72,20 +76,12 @@ class ViewController: NSViewController {
     @IBAction func downBtn(_ sender: NSButton) { if simView.state == .running { simView.dataController?.addTask(.shouldMoveDown) } }
     @IBAction func collectBtn(_ sender: NSButton) { if simView.state == .running { simView.dataController?.addTask(.shouldCollectData) } }
     @IBAction func endBtn(_ sender: NSButton) { if simView.state == .running { simView.dataController?.addTask(.shouldEndDataSet) } }
-    @IBAction func startProgramBtn(_ sender: NSButton) { if simView.state == .running { simView.dataController?.shouldControlAutonomously = true } }
-    @IBAction func stopProgram(_ sender: NSButton) { if simView.state == .running { simView.dataController?.shouldControlAutonomously = false } }
+    @IBAction func startProgramBtn(_ sender: NSButton) { if simView.state == .running { simView.dataController?.startAutonomousControl() } }
+    @IBAction func stopProgram(_ sender: NSButton) { if simView.state == .running { simView.dataController?.stopAutonomousControl() } }
     
     
+    func showHeight(_ value: Float) { heightLbl.floatValue = value }
+    func showForce(_ value: Float) { forceLbl.floatValue = value }
     
 }
 
-
-//        self.currentMeshParameters = MeshParameters(r1: 3.3 / 2.0,
-//                                                        r2: 2.62 / 2.0,
-//                                                        fineness: 0.02,
-//                                                        n_outerSprings: 72,
-//                                                        innerSpringConstant: 10,
-//                                                        innerVelConstant: 0.5,
-//                                                        outerSpringConstant: 2,
-//                                                        outerVelConstant: 1,
-//                                                        outerSpringLength: 0.17)

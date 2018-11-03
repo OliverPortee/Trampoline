@@ -4,7 +4,7 @@ import Foundation
 import MetalKit
 import GLKit
 
-class SimulationView: MTKView {
+class SimulationView: MTKView, DataControllerDelegate {
     
     var renderer: Renderer!
     var updater: MeshUpdater!
@@ -12,19 +12,19 @@ class SimulationView: MTKView {
     var currentMeshParameters: MeshParameters?
     var lastFrameTime: NSDate!
     var mouseDragSensitivity: Float = 0.004
+    var scrollSensitivity: Float = 0.01
     var dataController: DataController?
     var shouldRun = false
     var initialValues: ([Particle], [Spring], [Float])!
-    var desiredVirtualTime: Float? = 0.001
+    var desiredVirtualTime: Float?// = 0.001
+    
     
 
-    enum State {
-        case `init`, parametersSet, loadingModel, readyToRun, running
-    }
-    var state: State! { didSet{ print("state changed to: \(state!)") } }
+    var state: ModelState! { didSet{ print("state changed to: \(state!)") } }
     
     required init(coder: NSCoder) {
         super.init(coder: coder)
+        self.preferredFramesPerSecond = 60
         self.state = .init
         self.device = MTLCreateSystemDefaultDevice()!
         let library = device!.makeDefaultLibrary()!
@@ -50,7 +50,8 @@ class SimulationView: MTKView {
             self.initialValues = self.mesh.makeCircularJumpingSheet(parameters: parameters)
             self.dataController = DataController()
             self.dataController!.dataParticleIndex = self.mesh.middleParticleIndex
-            self.dataController!.delegate = self.mesh
+            self.dataController!.mesh = self.mesh
+            self.dataController!.delegate = self
             self.updater.dataController = self.dataController
             self.state = .readyToRun
         }
@@ -58,12 +59,11 @@ class SimulationView: MTKView {
     
     func reloadModelInBackground() {
         self.state = .loadingModel
-        DispatchQueue.global(qos: .userInitiated).async {
-            self.mesh.initiateBuffers(particles: self.initialValues.0, springs: self.initialValues.1, constants: self.initialValues.2)
-            self.dataController?.reset()
-            self.lastFrameTime = NSDate()
-            self.state = .readyToRun
-        }
+        self.mesh.initiateBuffers(particles: self.initialValues.0, springs: self.initialValues.1, constants: self.initialValues.2)
+        self.dataController?.reset()
+        self.lastFrameTime = NSDate()
+        self.state = .readyToRun
+        
     }
 
     private func updateTime() -> Float {
@@ -96,6 +96,9 @@ class SimulationView: MTKView {
         case .running:
             self.mesh.updateHandler(dt)
             renderer.renderFrame(renderObject: mesh, drawable: currentDrawable!, renderOnlyOtherRenderObjects: false)
+            (window?.contentViewController as! ViewController).showHeight(dataController?.currentDataParticle?.pos.y.rounded(toPlaces: 2) ?? -999)
+            (window?.contentViewController as! ViewController).showForce(dataController?.currentDataParticle?.force.y.rounded(toPlaces: 2) ?? -999)
+            
         }
     }
     
@@ -121,6 +124,8 @@ extension SimulationView {
         mesh.rotationX += (Float(event.deltaY) * mouseDragSensitivity)
         mesh.rotationY += (Float(event.deltaX) * mouseDragSensitivity)
         mesh.rotationZ += (Float(event.deltaZ) * mouseDragSensitivity)
+
+        
     }
     
 
@@ -128,10 +133,19 @@ extension SimulationView {
         mesh.projectionMatrix = float4x4(glkMatrix: GLKMatrix4MakePerspective(85 * Float.pi / 180, frame.aspectRatio, 0.01, 100))
     }
     
+    override func scrollWheel(with event: NSEvent) {
+        let deltaZ = Float(event.scrollingDeltaY) * scrollSensitivity
+        mesh.parentModelMatrix[3, 2] += deltaZ
+    }
     
     
     
     
+}
+
+
+enum ModelState {
+    case `init`, parametersSet, loadingModel, readyToRun, running
 }
 
 
@@ -182,6 +196,3 @@ struct MeshParameters: CustomStringConvertible {
 
 
 
-extension NSRect {
-    var aspectRatio: Float { return Float(self.width / self.height) }
-}

@@ -4,7 +4,6 @@ import MetalKit
 import GLKit
 import simd
 
-protocol _StaticDefaultProperty { static var defaultSelf: Self { get } }
 
 
 struct Particle: _StaticDefaultProperty {
@@ -156,37 +155,6 @@ class CircularTrampolineMesh: Mesh {
         self.parameters = parameters
         self.otherRendering.append(HelperGraphics(fromParameters: parameters, device: device))
     }
-}
-
-
-
-
-extension Array where Element: _StaticDefaultProperty {
-    init(fromMTLBuffer buffer: MTLBuffer) {
-        assert(buffer.length % MemoryLayout<Element>.stride == 0)
-        let countOfInstances = buffer.length / MemoryLayout<Element>.stride
-        self.init(repeating: Element.defaultSelf, count: countOfInstances)
-        let result = buffer.contents().bindMemory(to: Element.self, capacity: countOfInstances)
-        for index in 0..<countOfInstances { self[index] = result[index] }
-    }
-}
-
-extension MTLBuffer {
-    func getInstances<T>(atByte byte: Int, countOfInstances: Int = 1) -> [T] {
-        assert(byte % MemoryLayout<T>.stride == 0)
-        let result = contents().advanced(by: byte).bindMemory(to: T.self, capacity: countOfInstances)
-        return Array(UnsafeBufferPointer(start: result, count: countOfInstances))
-    }
-    
-    func modifyInstances<T>(atByte byte: Int, newValues: [T]) {
-        let tStride = MemoryLayout<T>.stride
-        let count = newValues.count
-        assert(byte % tStride == 0)
-        assert(byte + tStride * count <= length)
-        
-        contents().advanced(by: byte).copyMemory(from: newValues, byteCount: tStride * count)
-    }
-    
 }
 
 
@@ -452,10 +420,9 @@ extension CircularTrampolineMesh {
         
         for index in connections.indices {
             let spring = connections[index]
-            print(Float(index) / Float(connections.count))
+//            print(Float(index) / Float(connections.count))
             let p1Index = Int32(helperParticles.firstIndex { $0 == spring.p1! }!)
             let p2Index = Int32(helperParticles.firstIndex { $0 == spring.p2! }!)
-//            springs.append(Spring(p1Index: p1Index, p2Index: p2Index, springConstant: spring.springConstant, velConstant: spring.velConstant, initialLength: spring.initialLength))
             let springConstantIndex = Int32(constants.firstIndex { $0 == spring.springConstant }!)
             let velConstantIndex = Int32(constants.firstIndex { $0 == spring.velConstant }!)
 

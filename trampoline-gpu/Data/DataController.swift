@@ -1,30 +1,29 @@
 
 import Cocoa
 
+protocol DataControllerDelegate {
+    func resetSim()
+    var state: ModelState! { get set }
+    var shouldRun: Bool { get set }
+}
+
+
+
 class DataController: FloatData2 {
+
     
-    
-    
-    var delegate: CircularTrampolineMesh?
+    var mesh: CircularTrampolineMesh?
+    var delegate: DataControllerDelegate?
     var dataParticleIndex: Int?
     var deltaY: Float = 0.2
-    var tasks = [Task]()
-    var desiredDataParticlePosition: Float = 0
-    var meshSensitivity: Float = 1
-    var averageCount = 20
-    var dataParticleYMinimum: Float = -5
-    var shouldControlAutonomously: Bool = false
-    var currentDataParticleIsLocked: Bool = false
+    private var tasks = [Task]()
+    private var dataParticleYMinimum: Float = -6
+    private var shouldControlAutonomously: Bool = false
+    private var lastDataParticleChange: Float = 0
+    private var measurementLatency: Float = 0.2
+    private(set) var currentDataParticle: Particle!
     
-    
-    var dataParticle: Particle? {
-        if let mesh = self.delegate, let index = dataParticleIndex {
-            return mesh.particleBuffer.getInstances(atByte: index * Constants.particleStride)[0]
-        } else { return nil }
-        
-    }
-    
-    var dataParticleByte: Int? {
+    private var dataParticleByte: Int? {
         if let index = dataParticleIndex {
             return index * Constants.particleStride
         } else { return nil }
@@ -43,104 +42,119 @@ class DataController: FloatData2 {
         case shouldSetOuterVelConstant(value: Float)
     }
     
+    func startAutonomousControl() {
+        delegate?.resetSim()
+        delegate?.state = .running
+        delegate?.shouldRun = true
+        lastDataParticleChange = 0
+        shouldControlAutonomously = true
+        
+    }
+    
+    func stopAutonomousControl() {
+        endDataSet()
+        shouldControlAutonomously = false
+    }
+    
     func addTask(_ task: Task) {
         tasks.append(task)
         shouldControlAutonomously = false 
     }
     
-    func update() {
-        for _ in 0..<tasks.count {
-            switch tasks[0] {
-            case .shouldCollectData: collectData()
-            case .shouldMoveUp: moveDataParticleUp()
-            case .shouldMoveDown: moveDataParticleDown()
-            case .shouldToggleIsLocked: toggleLock()
-            case .shouldEndDataSet: endDataSet()
-            case .shouldSetInnerSpringConstant(let value): setInnerSpringConstant(value: value)
-            case .shouldSetInnerVelConstant(let value): setInnerVelConstant(value: value)
-            case .shouldSetOuterSpringConstant(let value): setOuterSpringConstant(value: value)
-            case .shouldSetOuterVelConstant(let value): setOuterVelConstant(value: value)
-            }
-            tasks.remove(at: 0)
+    private func fetchCurrentDataParticle() {
+        if let mesh = self.mesh, let byte = dataParticleByte {
+            let particle: Particle = mesh.particleBuffer.getInstances(atByte: byte)[0]
+            self.currentDataParticle = particle
+        } else {
+            assert(false)
         }
+    }
+    
+    
+    func update(dt: Float) {
+        fetchCurrentDataParticle()
         
+        assert(mesh != nil)
+        assert(dataParticleIndex != nil)
+        assert(currentDataParticle != nil)
+        
+ 
         if shouldControlAutonomously {
-            if currentDataParticleIsLocked == false { toggleLock() }
-            controlAutonomously() }
-        
+            lastDataParticleChange += dt
+            controlAutonomously()
+        } else {
+            for _ in 0..<tasks.count {
+                switch tasks[0] {
+                case .shouldCollectData: collectData()
+                case .shouldMoveUp: moveDataParticleUp()
+                case .shouldMoveDown: moveDataParticleDown()
+                case .shouldToggleIsLocked: toggleLock()
+                case .shouldEndDataSet: endDataSet()
+                case .shouldSetInnerSpringConstant(let value): setInnerSpringConstant(value: value)
+                case .shouldSetInnerVelConstant(let value): setInnerVelConstant(value: value)
+                case .shouldSetOuterSpringConstant(let value): setOuterSpringConstant(value: value)
+                case .shouldSetOuterVelConstant(let value): setOuterVelConstant(value: value)
+                }
+                tasks.remove(at: 0)
+            }
+        }
     }
     
     func reset() {
         tasks.removeAll()
     }
     
-    func velAverageIsSmallEnough() -> Bool {
-        if let mesh = delegate {
-            var velVals = [Float]()
-            for _ in 0..<averageCount {
-                let index = Int.random(in: 0..<mesh.particleCount)
-                let particle: Particle = mesh.particleBuffer.getInstances(atByte: index * Constants.particleStride)[0]
-                velVals.append(particle.vel.y)
-            }
-            if velVals.average < meshSensitivity { return true }
-        }
-        return false
-    }
     
-    func controlAutonomously() {
-        if desiredDataParticlePosition <= dataParticleYMinimum { endDataSet(); return }
-        else if velAverageIsSmallEnough() { moveDataParticleDown() }
+    private func controlAutonomously() {
+        if currentDataParticle.isLocked == false { toggleLock() }
+        if currentDataParticle.pos.y <= dataParticleYMinimum { collectData(); startAutonomousControl() }
+        else if lastDataParticleChange >= measurementLatency { collectData(); moveDataParticleDown(); lastDataParticleChange = 0 }
 
     }
     
     func collectData() {
-        if let particle = dataParticle {
+        if let particle = currentDataParticle {
             self.addValue(x: particle.pos.y, y: particle.force.y)
         }
     }
     
     func toggleLock() {
-        if var particle = dataParticle, let mesh = self.delegate, let byte = dataParticleByte {
+        if var particle = currentDataParticle, let mesh = self.mesh, let byte = dataParticleByte {
             particle.isLocked.toggle()
-            currentDataParticleIsLocked = particle.isLocked
             mesh.particleBuffer.modifyInstances(atByte: byte, newValues: [particle])
         }
     }
 
     func moveDataParticleUp() {
-        if let mesh = self.delegate, let byte = dataParticleByte {
-            desiredDataParticlePosition += deltaY
-            var dataParticle: Particle = mesh.particleBuffer.getInstances(atByte: byte)[0]
-            dataParticle.pos.y = desiredDataParticlePosition
-            mesh.particleBuffer.modifyInstances(atByte: byte, newValues: [dataParticle])
+        if let mesh = self.mesh, let byte = dataParticleByte, var particle = currentDataParticle {
+            particle.pos.y += deltaY
+            mesh.particleBuffer.modifyInstances(atByte: byte, newValues: [particle])
         }
     }
     
     func moveDataParticleDown() {
-        if let mesh = self.delegate, let byte = dataParticleByte {
-            desiredDataParticlePosition -= deltaY
-            var dataParticle: Particle = mesh.particleBuffer.getInstances(atByte: byte)[0]
-            dataParticle.pos.y = desiredDataParticlePosition
-            mesh.particleBuffer.modifyInstances(atByte: byte, newValues: [dataParticle])
+        if let mesh = self.mesh, let byte = dataParticleByte, var particle = currentDataParticle {
+            particle.pos.y -= deltaY
+            mesh.particleBuffer.modifyInstances(atByte: byte, newValues: [particle])
         }
     }
     
     func endDataSet() {
-        if let mesh = self.delegate {
+        if let mesh = self.mesh {
             addPairsToFile(basePath: .desktopDirectory, folderPath: "TramplineOutput/", fileName: "1.txt", parameters: mesh.parameters)
         }
     }
     
-    func addPairsToFile(basePath: FileManager.SearchPathDirectory, folderPath: String, fileName: String, parameters: MeshParameters?) {
+    private func addPairsToFile(basePath: FileManager.SearchPathDirectory, folderPath: String, fileName: String, parameters: MeshParameters?) {
         var result = DataController.getDescriptionString(parameters: parameters)
         for (x, y) in averagedPairs {
             result += "\n\(x) \(y)"
         }
         print(result)
-        print(result.writeToEndOfFile(basePath: basePath, folderPath: folderPath, fileName: fileName))
+        result.writeToEndOfFile(basePath: basePath, folderPath: folderPath, fileName: fileName)
     }
     
-    static func getDescriptionString(parameters: MeshParameters?) -> String {
+    private static func getDescriptionString(parameters: MeshParameters?) -> String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateStyle = .short
         dateFormatter.timeStyle = .medium
@@ -151,28 +165,28 @@ class DataController: FloatData2 {
     }
     
     func setInnerSpringConstant(value: Float) {
-        if let mesh = self.delegate {
+        if let mesh = self.mesh {
             let byte = Constants.constantStride * ConstantsIndex.innerSpringConstantsBuffer.rawValue
             mesh.constantsBuffer.modifyInstances(atByte: byte, newValues: [value])
         }
     }
     
     func setInnerVelConstant(value: Float) {
-        if let mesh = self.delegate {
+        if let mesh = self.mesh {
             let byte = Constants.constantStride * ConstantsIndex.innerVelConstantsBuffer.rawValue
             mesh.constantsBuffer.modifyInstances(atByte: byte, newValues: [value])
         }
     }
     
     func setOuterSpringConstant(value: Float) {
-        if let mesh = self.delegate {
+        if let mesh = self.mesh {
             let byte = Constants.constantStride * ConstantsIndex.outerSpringConstant.rawValue
             mesh.constantsBuffer.modifyInstances(atByte: byte, newValues: [value])
         }
     }
     
     func setOuterVelConstant(value: Float) {
-        if let mesh = self.delegate {
+        if let mesh = self.mesh {
             let byte = Constants.constantStride * ConstantsIndex.outerVelConstant.rawValue
             mesh.constantsBuffer.modifyInstances(atByte: byte, newValues: [value])
         }
@@ -181,22 +195,3 @@ class DataController: FloatData2 {
 }
 
 
-extension String {
-    @discardableResult func writeToEndOfFile(basePath: FileManager.SearchPathDirectory, folderPath: String, fileName: String) -> Bool {
-        let fm = FileManager.default
-        guard var baseURL = fm.urls(for: basePath, in: .userDomainMask).first else { return false }
-        baseURL.appendPathComponent(folderPath)
-        do { try fm.createDirectory(at: baseURL, withIntermediateDirectories: true, attributes: nil) }
-        catch let error { print(error); return false }
-        let fileURL = baseURL.appendingPathComponent(fileName)
-        if !fm.fileExists(atPath: fileURL.path) {
-            fm.createFile(atPath: fileURL.path, contents: nil, attributes: nil)
-        }
-        guard let fileHandle = try? FileHandle(forWritingTo: fileURL) else { return false }
-        guard let data = self.data(using: .utf8) else { return false }
-        fileHandle.seekToEndOfFile()
-        fileHandle.write(data)
-        fileHandle.closeFile()
-        return true
-    }
-}

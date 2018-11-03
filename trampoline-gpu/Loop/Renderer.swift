@@ -93,11 +93,11 @@ class Renderer: NSObject {
             }
         }
         
-        _ = inFlightSemaphore.wait(timeout: DispatchTime.distantFuture)
-        let semaphore = inFlightSemaphore
+//        _ = inFlightSemaphore.wait(timeout: DispatchTime.distantFuture)
+//        let semaphore = inFlightSemaphore
         
         let commandBuffer = self.commandQueue.makeCommandBuffer()!
-        commandBuffer.addCompletedHandler { (_) in semaphore.signal() }
+//        commandBuffer.addCompletedHandler { (_) in semaphore.signal() }
         
         uniformBufferIndex = (uniformBufferIndex + 1) % maxBuffersInFlight
         uniformBufferOffset = alignedUniformsSize * uniformBufferIndex

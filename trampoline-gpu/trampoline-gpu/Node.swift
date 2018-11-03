@@ -55,22 +55,3 @@ class Node {
 }
 
 
-extension float4x4 {
-    init(glkMatrix: GLKMatrix4) {
-        self.init(columns: (float4(x: glkMatrix.m00, y: glkMatrix.m01, z: glkMatrix.m02, w: glkMatrix.m03),
-                            float4(x: glkMatrix.m10, y: glkMatrix.m11, z: glkMatrix.m12, w: glkMatrix.m13),
-                            float4(x: glkMatrix.m20, y: glkMatrix.m21, z: glkMatrix.m22, w: glkMatrix.m23),
-                            float4(x: glkMatrix.m30, y: glkMatrix.m31, z: glkMatrix.m32, w: glkMatrix.m33)))
-    }
-}
-
-
-extension GLKMatrix4 {
-    init(float4x4matrix matrix: float4x4) {
-        self.init(m: (matrix[0, 0], matrix[0, 1], matrix[0, 2], matrix[0, 3],
-                      matrix[1, 0], matrix[1, 1], matrix[1, 2], matrix[1, 3],
-                      matrix[2, 0], matrix[2, 1], matrix[2, 2], matrix[2, 3],
-                      matrix[3, 0], matrix[3, 1], matrix[3, 2], matrix[3, 3]))
-    }
-}
-

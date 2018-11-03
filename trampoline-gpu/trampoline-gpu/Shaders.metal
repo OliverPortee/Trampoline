@@ -60,6 +60,7 @@ kernel void spring_update(device Particle *particles [[ buffer(ParticleBufferInd
         float3 force_at_p1 = normalize(d_pos) * springConstant * (current_length - spring.initialLength) + velConstant * (p2.vel - p1.vel);
         particles[spring.indices.x].force += force_at_p1;
         particles[spring.indices.y].force += -force_at_p1;
+        
     }
 }
 
@@ -67,6 +68,7 @@ kernel void particle_update(device Particle *particles [[ buffer(ParticleBufferI
                             constant float *physicalUniforms [[ buffer(PhysicalUniformsBufferIndex) ]],
                             uint id [[ thread_position_in_grid ]])
 {
+    
     if (!particles[id].isLocked) {
         float3 gravity = float3(0, physicalUniforms[1], 0);
         particles[id].vel += ((particles[id].force / particles[id].mass) + gravity) * physicalUniforms[0];

@@ -26,10 +26,8 @@ The program saves force and height of the data particle in a DoubleData instance
 ## To Do
 There is still a lot to do:
 
-- [dispatch queue and initialization in background, otherrendering einzeln, connect ui with data controller, read tuts in reading list]
-- work on framerate 
+- control springconstants of outer springs (they seem inconsistent), liverendering, synchronisation with ui at the beginning (mesh paramters from sliders), force problem solved?
 - work on usability: show framerate, show button for non real time rendering, show height and force of dataParticle, button to start/stop the model
-- make the model load in different thread
 - make UI and Unit Tests
 - document program
 	

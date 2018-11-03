@@ -27,11 +27,17 @@ class MeshUpdater: NSObject {
     
     func update(dt: Float, mesh: Mesh) {
         updateSprings(mesh: mesh)
-        if let dataController = self.dataController {
-            dataController.update()
-        }
         
+        dump(mesh.particleArray.map { $0.force }, name: nil, indent: 4, maxDepth: 10, maxItems: 50)
+        if let dataController = self.dataController {
+            dataController.update(dt: dt)
+        }
+        print(dataController?.currentDataParticle.force)
+
         updateParticles(dt: dt, mesh: mesh)
+        
+//        dump(mesh.particleArray.map { $0.force }, name: "force", indent: 4, maxDepth: 10, maxItems: 50)
+
         
     }
 
@@ -60,7 +66,7 @@ class MeshUpdater: NSObject {
 
         computeCommandEncoder.setBuffer(mesh.particleBuffer, offset: 0, index: BufferIndex.ParticleBufferIndex.rawValue)
         computeCommandEncoder.setBuffer(mesh.springBuffer, offset: 0, index: BufferIndex.SpringBufferIndex.rawValue)
-        let physicalUniforms = [dt, gravity]
+        let physicalUniforms = [dt, -gravity]
         let constants = device.makeBuffer(bytes: physicalUniforms, length: MemoryLayout<Float>.stride * 2, options: [])
         computeCommandEncoder.setBuffer(constants, offset: 0, index: BufferIndex.PhysicalUniformsBufferIndex.rawValue)
         let h = particlePipelineState.threadExecutionWidth

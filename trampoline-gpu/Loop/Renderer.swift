@@ -51,6 +51,7 @@ class Renderer: NSObject {
     var movieRenderTime: Double?
     var shouldRenderMovie = false
     
+    
     init(device: MTLDevice, commandQueue: MTLCommandQueue) {
         self.device = device
         self.commandQueue = commandQueue
@@ -128,15 +129,44 @@ class Renderer: NSObject {
             let renderPassDescriptor = getRenderPassDescriptor(drawable: drawable, clearColor: renderObject.clearColor)
             renderRenderable(otherRenderObject, commandBuffer: commandBuffer, renderPassDescriptor: renderPassDescriptor)
         }
-        
+
         
         if let recorder = self.recorder, movieRenderTime != nil {
+
+
             movieRenderTime! += dt
-            recorder.writeFrame(forTexture: drawable.texture, time: movieRenderTime!)
+            
+            let textureDescriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: MTLPixelFormat.bgra8Unorm, width: Int(drawable.texture.width), height: Int(drawable.texture.height), mipmapped: false)
+            textureDescriptor.usage = .renderTarget
+            textureDescriptor.storageMode = .managed
+            let newTexture = device.makeTexture(descriptor: textureDescriptor)!
+
+            copyTexture(buffer: commandBuffer, from: drawable.texture, to: newTexture)
+            
+//            let newTexture = drawable.texture.makeTextureView(pixelFormat: .a8Unorm)!
+            recorder.writeFrame(forTexture: newTexture, time: movieRenderTime!)
         }
-        
         commandBuffer.present(drawable)
         commandBuffer.commit()
+
+    }
+    
+    func copyTexture(encoder: MTLBlitCommandEncoder, from: MTLTexture, to: MTLTexture) {
+        let width = min(from.width, to.width)
+        let height = min(from.height, to.height)
+        let depth = min(from.depth, to.depth)
+        let size = MTLSize(width: width, height: height, depth: depth)
+        encoder.copy(from: from, sourceSlice: 0, sourceLevel: 0, sourceOrigin: MTLOriginMake(0, 0, 0), sourceSize: size,
+                     to: to, destinationSlice: 0, destinationLevel: 0, destinationOrigin: MTLOriginMake(0, 0, 0))
+    }
+    func copyTexture(buffer: MTLCommandBuffer, from: MTLTexture, to: MTLTexture) {
+        guard let blit = buffer.makeBlitCommandEncoder() else {
+            return
+        }
+        copyTexture(encoder: blit, from: from, to: to)
+        blit.synchronize(resource: to)
+
+        blit.endEncoding()
     }
 
     

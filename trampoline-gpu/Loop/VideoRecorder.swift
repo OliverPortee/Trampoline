@@ -33,6 +33,7 @@ class VideoRecorder {
     func startRecording() {
         let result = assetWriter.startWriting()
         assert(result)
+        
         assetWriter.startSession(atSourceTime: CMTime.zero)
         
         isRecording = true
@@ -68,8 +69,9 @@ class VideoRecorder {
         let pixelBufferBytes = CVPixelBufferGetBaseAddress(pixelBuffer)!
         
         // Use the bytes per row value from the pixel buffer since its stride may be rounded up to be 16-byte aligned
-        let bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer)
+        let bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer) 
         let region = MTLRegionMake2D(0, 0, texture.width, texture.height)
+        
         
         texture.getBytes(pixelBufferBytes, bytesPerRow: bytesPerRow, from: region, mipmapLevel: 0)
         

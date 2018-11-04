@@ -25,6 +25,7 @@ class SimulationView: MTKView, DataControllerDelegate {
     
     required init(coder: NSCoder) {
         super.init(coder: coder)
+        framebufferOnly = false
         self.preferredFramesPerSecond = 60
         self.state = .init
         self.device = MTLCreateSystemDefaultDevice()!
@@ -106,15 +107,15 @@ class SimulationView: MTKView, DataControllerDelegate {
             renderer.renderFrame(renderObject: mesh, drawable: currentDrawable!, renderOnlyOtherRenderObjects: false, dt: dt)
             (window?.contentViewController as! ViewController).showHeight(String(format: "%.2f", dataController?.dataParticleHeight ?? -999))
             (window?.contentViewController as! ViewController).showForce(String(format: "%.1f", dataController?.dataParticleForce.y ?? -999))
-            (window?.contentViewController as! ViewController).showTime(String(format: "%.1f", virtualTime))
+            (window?.contentViewController as! ViewController).showTime(String(format: "%.3f", virtualTime))
             
         }
     }
     
     
-    func resetSim() {
+    func resetSim(resetVirtualTime: Bool) {
         if state == .readyToRun || state == .running {
-            virtualTime = 0
+            if resetVirtualTime { virtualTime = 0 }
             reloadModelInBackground()
             shouldRun = false
             (window?.contentViewController as! ViewController).showHeight("?")

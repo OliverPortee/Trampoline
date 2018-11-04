@@ -6,7 +6,11 @@
 class FloatData2 {
     
     private(set) var values = [Float : [Float]]()
-    var averagedPairs: [Float : Float] { return values.mapValues { (yValues) -> Float in return yValues.average } }
+    var averagedLists: ([Float], [Float]) {
+        let averaged = values.mapValues { (yValues) -> Float in return yValues.average }
+        let sortedX = values.keys.sorted()
+        return (sortedX, sortedX.map{ averaged[$0]! })
+    }
     
     func overwriteValueIfNecessary(x: Float, y: [Float]) {
         values[x] = y

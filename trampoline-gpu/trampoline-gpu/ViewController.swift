@@ -30,7 +30,7 @@ class ViewController: NSViewController {
                                         outerSpringConstant: 2,
                                         outerVelConstant: 1,
                                         outerSpringLength: 0.17,
-                                        n_dataParticles: 8)
+                                        n_dataParticles: 13)
    
         
         simView.setMeshParamters(parameters: parameters)
@@ -73,7 +73,8 @@ class ViewController: NSViewController {
  
     @IBAction func renderMovieCheckBoxChanged(_ sender: NSButtonCell) {
         if sender.state == .on {
-            let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            var url = FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask)[0]
+            url.appendPathComponent("movie.mp4")
             simView.renderer.startRecording(size: simView.frame.size, url: url)
         } else {
             simView.renderer.stopRecording()
@@ -81,7 +82,7 @@ class ViewController: NSViewController {
     }
     @IBAction func startSimBtn(_ sender: NSButton) { simView.shouldRun = true }
     @IBAction func stopSimBtn(_ sender: NSButton) { simView.shouldRun = false }
-    @IBAction func resetSimBtn(_ sender: NSButton) { simView.resetSim() }
+    @IBAction func resetSimBtn(_ sender: NSButton) { simView.resetSim(resetVirtualTime: true) }
     @IBAction func toggleLockBtn(_ sender: NSButton) { if simView.state == .running { simView.dataController?.addTask(.shouldToggleIsLocked) } }
     @IBAction func upBtn(_ sender: NSButton) { if simView.state == .running { simView.dataController?.addTask(.shouldMoveUp) } }
     @IBAction func downBtn(_ sender: NSButton) { if simView.state == .running { simView.dataController?.addTask(.shouldMoveDown) } }

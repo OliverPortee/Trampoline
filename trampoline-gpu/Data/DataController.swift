@@ -2,7 +2,7 @@
 import Cocoa
 
 protocol DataControllerDelegate {
-    func resetSim()
+    func resetSim(resetVirtualTime: Bool)
     var state: ModelState! { get set }
     var shouldRun: Bool { get set }
 }
@@ -44,7 +44,7 @@ class DataController: FloatData2 {
     }
     
     func startAutonomousControl() {
-        delegate?.resetSim()
+        delegate?.resetSim(resetVirtualTime: false)
         delegate?.state = .running
         delegate?.shouldRun = true
         lastDataParticleChange = 0
@@ -105,6 +105,7 @@ class DataController: FloatData2 {
     
     
     private func controlAutonomously() {
+        #warning("take multiple measures")
         if currentDataParticles[0].isLocked == false { toggleLock() }
         if currentDataParticles[0].pos.y <= dataParticleYMinimum { collectData(); startAutonomousControl() }
         else if lastDataParticleChange >= measurementLatency { collectData(); moveDataParticleDown(); lastDataParticleChange = 0 }
@@ -154,8 +155,10 @@ class DataController: FloatData2 {
     
     private func addPairsToFile(basePath: FileManager.SearchPathDirectory, folderPath: String, fileName: String, parameters: MeshParameters?) {
         var result = DataController.getDescriptionString(parameters: parameters)
-        for (x, y) in averagedPairs {
-            result += "\n\(x) \(y)"
+        let (xList, yList) = averagedLists
+        for index in xList.indices {
+            let line = "\n\(xList[index]) \(yList[index])"
+            result += line
         }
         print(result)
         result.writeToEndOfFile(basePath: basePath, folderPath: folderPath, fileName: fileName)

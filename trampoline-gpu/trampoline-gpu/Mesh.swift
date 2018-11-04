@@ -145,7 +145,7 @@ class Mesh: Node, NonRealTimeRenderable {
 class CircularTrampolineMesh: Mesh {
     
     private(set) var parameters: MeshParameters!
-    private(set) var middleParticleIndex: Int!
+    private(set) var middleParticleIndices: [Int]!
     
     override init(device: MTLDevice, projectionMatrix: GLKMatrix4, parentModelMatrix: GLKMatrix4, updateHandler: @escaping (_ dt: Float) -> Void) {
         super.init(device: device, projectionMatrix: projectionMatrix, parentModelMatrix: parentModelMatrix, updateHandler: updateHandler)
@@ -433,9 +433,12 @@ extension CircularTrampolineMesh {
         
         var particles = [Particle]()
         
-        let middleParticle = getNearestHelperParticles(ofPosition: float3(0, 0, 0), withinArray: helperParticles, count: 1, containingSelf: true)[0]
+        let middleParticles = getNearestHelperParticles(ofPosition: float3(0, 0, 0), withinArray: helperParticles, count: parameters.n_dataParticles, containingSelf: true)
         
-        let middleParticleIndex = helperParticles.firstIndex { $0 == middleParticle }!
+//        let middleParticleIndex = helperParticles.firstIndex { $0 == middleParticle }!
+        self.middleParticleIndices = middleParticles.map { (middleParticle) -> Int in
+            helperParticles.firstIndex { middleParticle == $0 }!
+        }
         
         for hp in helperParticles {
             particles.append(Particle(pos: hp.pos, vel: hp.vel, force: hp.force, mass: hp.mass, isLocked: hp.isLocked))
@@ -444,8 +447,7 @@ extension CircularTrampolineMesh {
         print("completed makeCircularJumpingSheet")
         
         self.initiateBuffers(particles: particles, springs: springs, constants: constants)
-        self.middleParticleIndex = middleParticleIndex
-        
+      
         return (particles, springs, constants)
     }
     

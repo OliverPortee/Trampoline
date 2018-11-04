@@ -29,7 +29,8 @@ class ViewController: NSViewController {
                                         innerVelConstant: 0.5,
                                         outerSpringConstant: 2,
                                         outerVelConstant: 1,
-                                        outerSpringLength: 0.17)
+                                        outerSpringLength: 0.17,
+                                        n_dataParticles: 8)
    
         
         simView.setMeshParamters(parameters: parameters)
@@ -40,16 +41,17 @@ class ViewController: NSViewController {
     @IBOutlet weak var timeSlider: NSSliderCell!
     @IBOutlet weak var heightLbl: NSTextField!
     @IBOutlet weak var forceLbl: NSTextField!
+    @IBOutlet weak var timeLbl: NSTextField!
     
     
     
     @IBAction func deltaHeightSliderChanged(_ sender: NSSliderCell) { simView.dataController?.deltaY = sender.floatValue }
     @IBAction func timeSliderChanged(_ sender: NSSliderCell) {
-        if realTimeCheckBox.state == .off { simView.desiredVirtualTime = sender.floatValue }
+        if realTimeCheckBox.state == .off { simView.desiredVirtualFrameTime = sender.doubleValue }
     }
     @IBAction func realTimeCheckBoxChanged(_ sender: NSButtonCell) {
-        if sender.state == .off { simView.desiredVirtualTime = timeSlider.floatValue }
-        else { simView.desiredVirtualTime = nil }
+        if sender.state == .off { simView.desiredVirtualFrameTime = timeSlider.doubleValue }
+        else { simView.desiredVirtualFrameTime = nil }
     }
     @IBAction func innerSpringConstantSliderChanged(_ sender: NSSliderCell) {
         simView.dataController?.addTask(.shouldSetInnerSpringConstant(value: sender.floatValue))
@@ -67,7 +69,16 @@ class ViewController: NSViewController {
         simView.updater.gravity = sender.floatValue
     }
     
-    @IBAction func renderMovieBtn(_ sender: NSButton) { simView.renderMovie() }
+    
+ 
+    @IBAction func renderMovieCheckBoxChanged(_ sender: NSButtonCell) {
+        if sender.state == .on {
+            let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            simView.renderer.startRecording(size: simView.frame.size, url: url)
+        } else {
+            simView.renderer.stopRecording()
+        }
+    }
     @IBAction func startSimBtn(_ sender: NSButton) { simView.shouldRun = true }
     @IBAction func stopSimBtn(_ sender: NSButton) { simView.shouldRun = false }
     @IBAction func resetSimBtn(_ sender: NSButton) { simView.resetSim() }
@@ -80,8 +91,8 @@ class ViewController: NSViewController {
     @IBAction func stopProgram(_ sender: NSButton) { if simView.state == .running { simView.dataController?.stopAutonomousControl() } }
     
     
-    func showHeight(_ value: Float) { heightLbl.floatValue = value }
-    func showForce(_ value: Float) { forceLbl.floatValue = value }
-    
+    func showHeight(_ value: String) { heightLbl.stringValue = value }
+    func showForce(_ value: String) { forceLbl.stringValue = value }
+    func showTime(_ value: String) { timeLbl.stringValue = value }
 }
 

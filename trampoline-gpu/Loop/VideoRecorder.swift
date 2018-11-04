@@ -12,6 +12,7 @@ class VideoRecorder {
         do {
             assetWriter = try AVAssetWriter(outputURL: url, fileType: .m4v)
         } catch {
+            print("could not initialize VideoRecorder")
             return nil
         }
         
@@ -21,15 +22,11 @@ class VideoRecorder {
         
         assetWriterVideoInput = AVAssetWriterInput(mediaType: .video, outputSettings: outputSettings)
         assetWriterVideoInput.expectsMediaDataInRealTime = false
-        
         let sourcePixelBufferAttributes: [String: Any] = [
             kCVPixelBufferPixelFormatTypeKey as String : kCVPixelFormatType_32BGRA,
             kCVPixelBufferWidthKey as String : size.width,
             kCVPixelBufferHeightKey as String : size.height ]
-        
-        assetWriterPixelBufferInput = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: assetWriterVideoInput,
-                                                                           sourcePixelBufferAttributes: sourcePixelBufferAttributes)
-        
+        assetWriterPixelBufferInput = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: assetWriterVideoInput, sourcePixelBufferAttributes: sourcePixelBufferAttributes)
         assetWriter.add(assetWriterVideoInput)
     }
     
@@ -59,14 +56,12 @@ class VideoRecorder {
             print("Pixel buffer asset writer input did not have a pixel buffer pool available; cannot retrieve frame")
             return
         }
-        
         var maybePixelBuffer: CVPixelBuffer? = nil
         let status  = CVPixelBufferPoolCreatePixelBuffer(nil, pixelBufferPool, &maybePixelBuffer)
         if status != kCVReturnSuccess {
             print("Could not get pixel buffer from asset writer input; dropping frame...")
             return
         }
-        
         guard let pixelBuffer = maybePixelBuffer else { return }
         
         CVPixelBufferLockBaseAddress(pixelBuffer, [])

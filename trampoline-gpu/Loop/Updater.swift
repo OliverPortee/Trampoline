@@ -32,11 +32,7 @@ class MeshUpdater: NSObject {
         if let dataController = self.dataController {
             dataController.update(dt: dt)
         }
-        if let force = dataController?.currentDataParticle.force {
-            if force != float3(0, 0, 0) {
-                print(dataController!.currentDataParticle.pos, force)
-            }
-        }
+
 
         updateParticles(dt: dt, mesh: mesh)
         
@@ -61,6 +57,7 @@ class MeshUpdater: NSObject {
         computeCommandEncoder.dispatchThreads(threadsPerGrid, threadsPerThreadgroup: threadsPerThreadGroup)
         computeCommandEncoder.endEncoding()
         commandBuffer.commit()
+        commandBuffer.waitUntilCompleted()
     }
 
     func updateParticles(dt: Float, mesh: Mesh) {
@@ -80,6 +77,7 @@ class MeshUpdater: NSObject {
         computeCommandEncoder.dispatchThreads(threadsPerGrid, threadsPerThreadgroup: threadsPerThreadGroup)
         computeCommandEncoder.endEncoding()
         commandBuffer.commit()
+        commandBuffer.waitUntilCompleted()
     }
 }
 

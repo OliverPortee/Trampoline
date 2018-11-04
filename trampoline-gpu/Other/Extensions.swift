@@ -30,6 +30,28 @@ extension Float {
     }
 }
 
+extension Double {
+    
+    func rounded(toPlaces places: Int) -> Double {
+        assert(places >= 0)
+        let divisor = pow(10.0, Double(places))
+        return (self * divisor).rounded() / divisor
+    }
+    
+    mutating func round(toPlaces places: Int) {
+        assert(places >= 0)
+        let divisor = pow(10.0, Double(places))
+        self = (self * divisor).rounded() / divisor
+    }
+}
+
+extension Array where Element == float3 {
+    var total: float3 {
+        var result = float3(0, 0, 0)
+        for vec in self { result += vec }
+        return result
+    }
+}
 
 extension float4x4 {
     init(glkMatrix: GLKMatrix4) {

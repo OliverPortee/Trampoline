@@ -16,7 +16,8 @@ class SimulationView: MTKView, DataControllerDelegate {
     var dataController: DataController?
     var shouldRun = false
     var initialValues: ([Particle], [Spring], [Float])!
-    var desiredVirtualTime: Float?// = 0.001
+    var desiredVirtualFrameTime: Double?// = 0.001
+    var virtualTime: Double = 0
     
     
 
@@ -45,11 +46,14 @@ class SimulationView: MTKView, DataControllerDelegate {
     
     
     func loadModelInBackground(parameters: MeshParameters) {
+        (window?.contentViewController as! ViewController).showHeight("?")
+        (window?.contentViewController as! ViewController).showForce("?")
+        (window?.contentViewController as! ViewController).showTime("?")
         self.state = .loadingModel
         DispatchQueue.global(qos: .userInitiated).async {
             self.initialValues = self.mesh.makeCircularJumpingSheet(parameters: parameters)
             self.dataController = DataController()
-            self.dataController!.dataParticleIndex = self.mesh.middleParticleIndex
+            self.dataController!.dataParticleIndices = self.mesh.middleParticleIndices
             self.dataController!.mesh = self.mesh
             self.dataController!.delegate = self
             self.updater.dataController = self.dataController
@@ -66,10 +70,10 @@ class SimulationView: MTKView, DataControllerDelegate {
         
     }
 
-    private func updateTime() -> Float {
-        let realDeltaTime = Float(-lastFrameTime.timeIntervalSinceNow)
+    private func updateTime() -> Double {
+        let realDeltaTime = -lastFrameTime.timeIntervalSinceNow
         self.lastFrameTime = NSDate()
-        if let virtualDeltaTime = desiredVirtualTime { return virtualDeltaTime }
+        if let virtualDeltaTime = desiredVirtualFrameTime { return virtualDeltaTime }
         return realDeltaTime
 
     }
@@ -90,26 +94,32 @@ class SimulationView: MTKView, DataControllerDelegate {
         case .`init`:
             break
         case .parametersSet, .loadingModel:
-            renderer.renderFrame(renderObject: mesh, drawable: currentDrawable!, renderOnlyOtherRenderObjects: true)
+            renderer.renderFrame(renderObject: mesh, drawable: currentDrawable!, renderOnlyOtherRenderObjects: true, dt: dt)
         case .readyToRun:
-            renderer.renderFrame(renderObject: mesh, drawable: currentDrawable!, renderOnlyOtherRenderObjects: false)
+            renderer.renderFrame(renderObject: mesh, drawable: currentDrawable!, renderOnlyOtherRenderObjects: false, dt: dt)
+            (window?.contentViewController as! ViewController).showHeight("!")
+            (window?.contentViewController as! ViewController).showForce("!")
+            (window?.contentViewController as! ViewController).showTime("!")
         case .running:
-            self.mesh.updateHandler(dt)
-            renderer.renderFrame(renderObject: mesh, drawable: currentDrawable!, renderOnlyOtherRenderObjects: false)
-            (window?.contentViewController as! ViewController).showHeight(dataController?.currentDataParticle?.pos.y.rounded(toPlaces: 2) ?? -999)
-            (window?.contentViewController as! ViewController).showForce(dataController?.currentDataParticle?.force.y.rounded(toPlaces: 2) ?? -999)
+            virtualTime += dt
+            self.mesh.updateHandler(Float(dt))
+            renderer.renderFrame(renderObject: mesh, drawable: currentDrawable!, renderOnlyOtherRenderObjects: false, dt: dt)
+            (window?.contentViewController as! ViewController).showHeight(String(format: "%.2f", dataController?.dataParticleHeight ?? -999))
+            (window?.contentViewController as! ViewController).showForce(String(format: "%.1f", dataController?.dataParticleForce.y ?? -999))
+            (window?.contentViewController as! ViewController).showTime(String(format: "%.1f", virtualTime))
             
         }
     }
     
-    func renderMovie() {
-        print("not implemented yet")
-    }
     
     func resetSim() {
         if state == .readyToRun || state == .running {
+            virtualTime = 0
             reloadModelInBackground()
             shouldRun = false
+            (window?.contentViewController as! ViewController).showHeight("?")
+            (window?.contentViewController as! ViewController).showForce("?")
+            (window?.contentViewController as! ViewController).showTime("?")
         }
     }
     
@@ -161,8 +171,9 @@ struct MeshParameters: CustomStringConvertible {
     var outerSpringConstant: Float
     var outerVelConstant: Float
     var outerSpringLength: Float
+    var n_dataParticles: Int
     
-    init(r1: Float, r2: Float, particleMass: Float, fineness: Float, n_outerSprings: Float, innerSpringConstant: Float, innerVelConstant: Float, outerSpringConstant: Float, outerVelConstant: Float, outerSpringLength: Float) {
+    init(r1: Float, r2: Float, particleMass: Float, fineness: Float, n_outerSprings: Float, innerSpringConstant: Float, innerVelConstant: Float, outerSpringConstant: Float, outerVelConstant: Float, outerSpringLength: Float, n_dataParticles: Int) {
         self.r1 = r1
         self.r2 = r2
         self.particleMass = particleMass
@@ -173,9 +184,10 @@ struct MeshParameters: CustomStringConvertible {
         self.outerSpringConstant = outerSpringConstant
         self.outerVelConstant = outerVelConstant
         self.outerSpringLength = outerSpringLength
+        self.n_dataParticles = n_dataParticles
     }
     
-    init(r1: Float, r2: Float, fineness: Float, n_outerSprings: Float, innerSpringConstant: Float, innerVelConstant: Float, outerSpringConstant: Float, outerVelConstant: Float, outerSpringLength: Float) {
+    init(r1: Float, r2: Float, fineness: Float, n_outerSprings: Float, innerSpringConstant: Float, innerVelConstant: Float, outerSpringConstant: Float, outerVelConstant: Float, outerSpringLength: Float, n_dataParticles: Int) {
         self.r1 = r1
         self.r2 = r2
         self.particleMass = 0.26 * fineness * fineness
@@ -186,10 +198,11 @@ struct MeshParameters: CustomStringConvertible {
         self.outerSpringConstant = outerSpringConstant
         self.outerVelConstant = outerVelConstant
         self.outerSpringLength = outerSpringLength
+        self.n_dataParticles = n_dataParticles
     }
     
     var description: String {
-        return "CircularTrampolineSheet{r1: \(r1), r2: \(r2), fineness: \(fineness), n_outerSprings: \(n_outerSprings), innerSpringConstant: \(innerSpringConstant), innerVelConstant: \(innerVelConstant), outerSpringConstant: \(outerSpringConstant), outerVelConstant: \(outerVelConstant), outerSpringLength: \(outerSpringLength)}"
+        return "CircularTrampolineSheet{r1: \(r1), r2: \(r2), fineness: \(fineness), n_outerSprings: \(n_outerSprings), innerSpringConstant: \(innerSpringConstant), innerVelConstant: \(innerVelConstant), outerSpringConstant: \(outerSpringConstant), outerVelConstant: \(outerVelConstant), outerSpringLength: \(outerSpringLength), n_dataParticles: \(n_dataParticles)}"
     }
 
 }

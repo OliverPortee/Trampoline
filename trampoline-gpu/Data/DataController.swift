@@ -14,21 +14,22 @@ class DataController: FloatData2 {
     
     var mesh: CircularTrampolineMesh?
     var delegate: DataControllerDelegate?
-    var dataParticleIndex: Int?
+    var dataParticleIndices: [Int]?
     var deltaY: Float = 0.2
     private var tasks = [Task]()
-    private var dataParticleYMinimum: Float = -6
+    private var dataParticleYMinimum: Float = -2
     private var shouldControlAutonomously: Bool = false
     private var lastDataParticleChange: Float = 0
-    private var measurementLatency: Float = 0.2
-    private(set) var currentDataParticle: Particle!
+    private var measurementLatency: Float = 0.1
+    private(set) var currentDataParticles: [Particle]!
     
-    private var dataParticleByte: Int? {
-        if let index = dataParticleIndex {
-            return index * Constants.particleStride
+    private var dataParticleBytes: [Int]? {
+        if let indices = dataParticleIndices {
+            return indices.map { $0 * Constants.particleStride }
         } else { return nil }
     }
-    
+    var dataParticleForce: float3 { return currentDataParticles.map({ $0.force }).total }
+    var dataParticleHeight: Float { return currentDataParticles[0].pos.y }
     
     enum Task {
         case shouldCollectData
@@ -62,9 +63,8 @@ class DataController: FloatData2 {
     }
     
     private func fetchCurrentDataParticle() {
-        if let mesh = self.mesh, let byte = dataParticleByte {
-            let particle: Particle = mesh.particleBuffer.getInstances(atByte: byte)[0]
-            self.currentDataParticle = particle
+        if let mesh = self.mesh, let bytes = dataParticleBytes {
+            self.currentDataParticles = bytes.map{ mesh.particleBuffer.getInstances(atByte: $0)[0] }
         } else {
             assert(false)
         }
@@ -75,9 +75,8 @@ class DataController: FloatData2 {
         fetchCurrentDataParticle()
         
         assert(mesh != nil)
-        assert(dataParticleIndex != nil)
-        assert(currentDataParticle != nil)
-        
+        assert(dataParticleIndices != nil)
+        assert(currentDataParticles != nil)
  
         if shouldControlAutonomously {
             lastDataParticleChange += dt
@@ -106,36 +105,44 @@ class DataController: FloatData2 {
     
     
     private func controlAutonomously() {
-        if currentDataParticle.isLocked == false { toggleLock() }
-        if currentDataParticle.pos.y <= dataParticleYMinimum { collectData(); startAutonomousControl() }
+        if currentDataParticles[0].isLocked == false { toggleLock() }
+        if currentDataParticles[0].pos.y <= dataParticleYMinimum { collectData(); startAutonomousControl() }
         else if lastDataParticleChange >= measurementLatency { collectData(); moveDataParticleDown(); lastDataParticleChange = 0 }
 
     }
     
     func collectData() {
-        if let particle = currentDataParticle {
-            self.addValue(x: particle.pos.y, y: particle.force.y)
+        if let particles = currentDataParticles {
+            let pos = particles[0].pos.y
+            let force = particles.map { $0.force.y }.total
+            self.addValue(x: pos, y: force)
         }
     }
     
     func toggleLock() {
-        if var particle = currentDataParticle, let mesh = self.mesh, let byte = dataParticleByte {
-            particle.isLocked.toggle()
-            mesh.particleBuffer.modifyInstances(atByte: byte, newValues: [particle])
+        if currentDataParticles != nil, let mesh = self.mesh, let bytes = dataParticleBytes {
+            for index in bytes.indices {
+                currentDataParticles![index].isLocked.toggle()
+                mesh.particleBuffer.modifyInstances(atByte: bytes[index], newValues: [currentDataParticles[index]])
+            }
         }
     }
 
     func moveDataParticleUp() {
-        if let mesh = self.mesh, let byte = dataParticleByte, var particle = currentDataParticle {
-            particle.pos.y += deltaY
-            mesh.particleBuffer.modifyInstances(atByte: byte, newValues: [particle])
+        if currentDataParticles != nil, let mesh = self.mesh, let bytes = dataParticleBytes {
+            for index in bytes.indices {
+                currentDataParticles[index].pos.y += deltaY
+                mesh.particleBuffer.modifyInstances(atByte: bytes[index], newValues: [currentDataParticles[index]])
+            }
         }
     }
     
     func moveDataParticleDown() {
-        if let mesh = self.mesh, let byte = dataParticleByte, var particle = currentDataParticle {
-            particle.pos.y -= deltaY
-            mesh.particleBuffer.modifyInstances(atByte: byte, newValues: [particle])
+        if currentDataParticles != nil, let mesh = self.mesh, let bytes = dataParticleBytes {
+            for index in bytes.indices {
+                currentDataParticles[index].pos.y -= deltaY
+                mesh.particleBuffer.modifyInstances(atByte: bytes[index], newValues: [currentDataParticles[index]])
+            }
         }
     }
     

@@ -47,8 +47,9 @@ class Renderer: NSObject {
     var uniformBufferOffset = 0
     var uniformBufferIndex = 0
     var uniforms: UnsafeMutablePointer<Uniforms>
-
-    
+    private var recorder: VideoRecorder?
+    var movieRenderTime: Double?
+    var shouldRenderMovie = false
     
     init(device: MTLDevice, commandQueue: MTLCommandQueue) {
         self.device = device
@@ -59,6 +60,19 @@ class Renderer: NSObject {
         uniforms = UnsafeMutableRawPointer(dynamicUniformBuffer.contents()).bindMemory(to: Uniforms.self, capacity: 1)
         
         super.init()
+    }
+    
+    
+    func startRecording(size: CGSize, url: URL) {
+        self.recorder = VideoRecorder(outputURL: url, size: size)
+        self.recorder!.startRecording()
+        movieRenderTime = 0
+    }
+    
+    func stopRecording() {
+        self.recorder?.endRecording { print("finished movie") }
+        self.recorder = nil
+        movieRenderTime = nil
     }
     
     private func renderRenderable(_ renderObject: Renderable, commandBuffer: MTLCommandBuffer, renderPassDescriptor: MTLRenderPassDescriptor) {
@@ -74,7 +88,8 @@ class Renderer: NSObject {
     
 
     
-    func renderFrame(renderObject: BaseRenderable, drawable: CAMetalDrawable, renderOnlyOtherRenderObjects: Bool) {
+    func renderFrame(renderObject: BaseRenderable, drawable: CAMetalDrawable, renderOnlyOtherRenderObjects: Bool, dt: Double) {
+        
         var shouldClear = true
         func getRenderPassDescriptor(drawable: CAMetalDrawable, clearColor: MTLClearColor) -> MTLRenderPassDescriptor {
             if shouldClear {
@@ -113,92 +128,99 @@ class Renderer: NSObject {
             let renderPassDescriptor = getRenderPassDescriptor(drawable: drawable, clearColor: renderObject.clearColor)
             renderRenderable(otherRenderObject, commandBuffer: commandBuffer, renderPassDescriptor: renderPassDescriptor)
         }
+        
+        
+        if let recorder = self.recorder, movieRenderTime != nil {
+            movieRenderTime! += dt
+            recorder.writeFrame(forTexture: drawable.texture, time: movieRenderTime!)
+        }
+        
         commandBuffer.present(drawable)
         commandBuffer.commit()
     }
 
     
-    func drawToTexture(renderObject: BaseRenderable, texture: inout MTLTexture) {
-        var shouldClear = true
-        func getRenderPassDescriptor(clearColor: MTLClearColor) -> MTLRenderPassDescriptor {
-            if shouldClear {
-                let renderPassDescriptor = MTLRenderPassDescriptor()
-                renderPassDescriptor.colorAttachments[0].texture = texture
-                renderPassDescriptor.colorAttachments[0].loadAction = .clear
-                renderPassDescriptor.colorAttachments[0].clearColor = clearColor
-                renderPassDescriptor.colorAttachments[0].storeAction = .store
-                shouldClear = false
-                return renderPassDescriptor
-            } else {
-                let renderPassDescriptor = MTLRenderPassDescriptor()
-                renderPassDescriptor.colorAttachments[0].texture = texture
-                renderPassDescriptor.colorAttachments[0].storeAction = .store
-                return renderPassDescriptor
-            }
-        }
-        
-        _ = inFlightSemaphore.wait(timeout: DispatchTime.distantFuture)
-        let semaphore = inFlightSemaphore
-        
-        let commandBuffer = self.commandQueue.makeCommandBuffer()!
-        commandBuffer.addCompletedHandler { (_) in semaphore.signal() }
-        
-        uniformBufferIndex = (uniformBufferIndex + 1) % maxBuffersInFlight
-        uniformBufferOffset = alignedUniformsSize * uniformBufferIndex
-        uniforms = UnsafeMutableRawPointer(dynamicUniformBuffer.contents() + uniformBufferOffset).bindMemory(to: Uniforms.self, capacity: 1)
-        uniforms[0].projectionMatrix = renderObject.projectionMatrix
-        uniforms[0].modelViewMatrix = renderObject.modelViewMatrix
-        
-        
-        let renderPassDescriptor = getRenderPassDescriptor(clearColor: renderObject.clearColor)
-        renderRenderable(renderObject, commandBuffer: commandBuffer, renderPassDescriptor: renderPassDescriptor)
-        
-        for otherRenderObject in renderObject.otherRendering {
-            let renderPassDescriptor = getRenderPassDescriptor(clearColor: renderObject.clearColor)
-            renderRenderable(otherRenderObject, commandBuffer: commandBuffer, renderPassDescriptor: renderPassDescriptor)
-        }
+//    func drawToTexture(renderObject: BaseRenderable, texture: inout MTLTexture) {
+//        var shouldClear = true
+//        func getRenderPassDescriptor(clearColor: MTLClearColor) -> MTLRenderPassDescriptor {
+//            if shouldClear {
+//                let renderPassDescriptor = MTLRenderPassDescriptor()
+//                renderPassDescriptor.colorAttachments[0].texture = texture
+//                renderPassDescriptor.colorAttachments[0].loadAction = .clear
+//                renderPassDescriptor.colorAttachments[0].clearColor = clearColor
+//                renderPassDescriptor.colorAttachments[0].storeAction = .store
+//                shouldClear = false
+//                return renderPassDescriptor
+//            } else {
+//                let renderPassDescriptor = MTLRenderPassDescriptor()
+//                renderPassDescriptor.colorAttachments[0].texture = texture
+//                renderPassDescriptor.colorAttachments[0].storeAction = .store
+//                return renderPassDescriptor
+//            }
+//        }
+//
+//        _ = inFlightSemaphore.wait(timeout: DispatchTime.distantFuture)
+//        let semaphore = inFlightSemaphore
+//
+//        let commandBuffer = self.commandQueue.makeCommandBuffer()!
+//        commandBuffer.addCompletedHandler { (_) in semaphore.signal() }
+//
+//        uniformBufferIndex = (uniformBufferIndex + 1) % maxBuffersInFlight
+//        uniformBufferOffset = alignedUniformsSize * uniformBufferIndex
+//        uniforms = UnsafeMutableRawPointer(dynamicUniformBuffer.contents() + uniformBufferOffset).bindMemory(to: Uniforms.self, capacity: 1)
+//        uniforms[0].projectionMatrix = renderObject.projectionMatrix
+//        uniforms[0].modelViewMatrix = renderObject.modelViewMatrix
+//
+//
+//        let renderPassDescriptor = getRenderPassDescriptor(clearColor: renderObject.clearColor)
+//        renderRenderable(renderObject, commandBuffer: commandBuffer, renderPassDescriptor: renderPassDescriptor)
+//
+//        for otherRenderObject in renderObject.otherRendering {
+//            let renderPassDescriptor = getRenderPassDescriptor(clearColor: renderObject.clearColor)
+//            renderRenderable(otherRenderObject, commandBuffer: commandBuffer, renderPassDescriptor: renderPassDescriptor)
+//        }
+//
+//        let copybackEncoder = commandBuffer.makeBlitCommandEncoder()!
+//        copybackEncoder.synchronize(resource: texture)
+//        copybackEncoder.endEncoding()
+//
+//        commandBuffer.commit()
+//
+//    }
+//
 
-        let copybackEncoder = commandBuffer.makeBlitCommandEncoder()!
-        copybackEncoder.synchronize(resource: texture)
-        copybackEncoder.endEncoding()
-        
-        commandBuffer.commit()
-        
-    }
+
     
-
-
-    
-    func renderMovie(size: CGSize, seconds: Float, deltaTime: Float, renderObject: NonRealTimeRenderable, url: URL) {
-        
-        let textureDescriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: MTLPixelFormat.bgra8Unorm, width: Int(size.width), height: Int(size.height), mipmapped: false)
-        textureDescriptor.usage = .renderTarget
-        textureDescriptor.storageMode = .managed
-        
-        
-        var texture = device.makeTexture(descriptor: textureDescriptor)!
-        
-        
-        let recorder = VideoRecorder(outputURL: url, size: size)
-        
-        guard recorder != nil else {
-            fatalError("VideoRecoder could not be initialized")
-        }
-        
-        recorder!.startRecording()
-        
-        for time in stride(from: 0, through: seconds, by: deltaTime) {
-            renderObject.updateHandler(deltaTime)
-            drawToTexture(renderObject: renderObject, texture: &texture)
-            recorder!.writeFrame(forTexture: texture, time: TimeInterval(time))
-            
-        }
-        
-        
-        recorder!.endRecording{ print("finished rendering") }
-        
-        
-    }
+//    func renderMovie(size: CGSize, seconds: Float, deltaTime: Float, renderObject: NonRealTimeRenderable, url: URL) {
+//
+//        let textureDescriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: MTLPixelFormat.bgra8Unorm, width: Int(size.width), height: Int(size.height), mipmapped: false)
+//        textureDescriptor.usage = .renderTarget
+//        textureDescriptor.storageMode = .managed
+//
+//
+//        var texture = device.makeTexture(descriptor: textureDescriptor)!
+//
+//
+//        let recorder = VideoRecorder(outputURL: url, size: size)
+//
+//        guard recorder != nil else {
+//            fatalError("VideoRecoder could not be initialized")
+//        }
+//
+//        recorder!.startRecording()
+//
+//        for time in stride(from: 0, through: seconds, by: deltaTime) {
+//            renderObject.updateHandler(deltaTime)
+//            drawToTexture(renderObject: renderObject, texture: &texture)
+//            recorder!.writeFrame(forTexture: texture, time: TimeInterval(time))
+//
+//        }
+//
+//
+//        recorder!.endRecording{ print("finished rendering") }
+//
+//
+//    }
     
 
 }

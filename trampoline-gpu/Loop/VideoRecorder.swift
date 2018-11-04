@@ -1,6 +1,7 @@
 import Metal
 import AVFoundation
 
+/// class for recording rendered content and writing it to movie files
 class VideoRecorder {
     var isRecording = false
     
@@ -8,6 +9,7 @@ class VideoRecorder {
     private var assetWriterVideoInput: AVAssetWriterInput
     private var assetWriterPixelBufferInput: AVAssetWriterInputPixelBufferAdaptor
     
+    /// init function of Video Recorder
     init?(outputURL url: URL, size: CGSize) {
         do {
             assetWriter = try AVAssetWriter(outputURL: url, fileType: .m4v)
@@ -15,11 +17,9 @@ class VideoRecorder {
             print("could not initialize VideoRecorder")
             return nil
         }
-        
         let outputSettings: [String: Any] = [ AVVideoCodecKey : AVVideoCodecType.h264,
                                               AVVideoWidthKey : size.width,
                                               AVVideoHeightKey : size.height ]
-        
         assetWriterVideoInput = AVAssetWriterInput(mediaType: .video, outputSettings: outputSettings)
         assetWriterVideoInput.expectsMediaDataInRealTime = false
         let sourcePixelBufferAttributes: [String: Any] = [
@@ -30,29 +30,27 @@ class VideoRecorder {
         assetWriter.add(assetWriterVideoInput)
     }
     
+    /// starts recording process
     func startRecording() {
         let result = assetWriter.startWriting()
         assert(result)
-        
         assetWriter.startSession(atSourceTime: CMTime.zero)
-        
         isRecording = true
     }
     
+    /// ends recording process
     func endRecording(_ completionHandler: @escaping () -> ()) {
         isRecording = false
-        
         assetWriterVideoInput.markAsFinished()
         assetWriter.finishWriting(completionHandler: completionHandler)
     }
     
+    /// writes frame to video file
     func writeFrame(forTexture texture: MTLTexture, time: TimeInterval) {
         if !isRecording {
             return
         }
-        
         while !assetWriterVideoInput.isReadyForMoreMediaData {}
-        
         guard let pixelBufferPool = assetWriterPixelBufferInput.pixelBufferPool else {
             print("Pixel buffer asset writer input did not have a pixel buffer pool available; cannot retrieve frame")
             return
@@ -64,20 +62,15 @@ class VideoRecorder {
             return
         }
         guard let pixelBuffer = maybePixelBuffer else { return }
-        
         CVPixelBufferLockBaseAddress(pixelBuffer, [])
         let pixelBufferBytes = CVPixelBufferGetBaseAddress(pixelBuffer)!
         
         // Use the bytes per row value from the pixel buffer since its stride may be rounded up to be 16-byte aligned
         let bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer) 
         let region = MTLRegionMake2D(0, 0, texture.width, texture.height)
-        
-        
         texture.getBytes(pixelBufferBytes, bytesPerRow: bytesPerRow, from: region, mipmapLevel: 0)
-        
         let presentationTime = CMTimeMakeWithSeconds(time, preferredTimescale: 240)
         assetWriterPixelBufferInput.append(pixelBuffer, withPresentationTime: presentationTime)
-        
         CVPixelBufferUnlockBaseAddress(pixelBuffer, [])
     }
 }

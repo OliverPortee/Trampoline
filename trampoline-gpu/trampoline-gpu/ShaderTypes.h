@@ -13,6 +13,8 @@
 
 #include <simd/simd.h>
 
+
+/// indices of buffers (at which port does the shader function receive the buffer)
 typedef NS_ENUM(NSInteger, BufferIndex)
 {
     ParticleBufferIndex = 0,
@@ -23,6 +25,8 @@ typedef NS_ENUM(NSInteger, BufferIndex)
     OtherRenderingBufferIndex = 5
 };
 
+
+/// indices determining position of constants in constantsArray
 typedef NS_ENUM(NSInteger, ConstantsIndex)
 {
     innerSpringConstantsBuffer = 0,
@@ -31,7 +35,7 @@ typedef NS_ENUM(NSInteger, ConstantsIndex)
     outerVelConstant = 3
 };
 
-
+/// uniforms for the rendering
 typedef struct
 {
     matrix_float4x4 projectionMatrix;

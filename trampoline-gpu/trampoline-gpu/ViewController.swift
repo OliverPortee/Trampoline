@@ -8,19 +8,17 @@
 
 import Cocoa
 
+
+/// class to control the program and build a bridge between UI and model
 class ViewController: NSViewController {
 
-    
+    /// MTKView for displaying the simulation
     @IBOutlet weak var simView: SimulationView!
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-    }
-    
-    
+    /// function called when main content view appears
     override func viewWillAppear() {
         super.viewWillAppear()
-        
+        /// set parameters of the mesh
         let parameters = MeshParameters(r1: 3.3 / 2.0,
                                         r2: 2.62 / 2.0,
                                         fineness: 0.05,
@@ -32,19 +30,19 @@ class ViewController: NSViewController {
                                         outerSpringLength: 0.17,
                                         n_dataParticles: 13)
    
-        
+        /// give the parameters to simulationView
         simView.setMeshParamters(parameters: parameters)
+        /// start loading the model
         simView.loadModelInBackground(parameters: parameters)
     }
-    
+    /// connections to UI elements (checkboxe and labels)
     @IBOutlet weak var realTimeCheckBox: NSButtonCell!
     @IBOutlet weak var timeSlider: NSSliderCell!
     @IBOutlet weak var heightLbl: NSTextField!
     @IBOutlet weak var forceLbl: NSTextField!
     @IBOutlet weak var timeLbl: NSTextField!
-    
-    
-    
+
+    /// glue code to respond to events triggered by the user (sliders and checkboxes)
     @IBAction func deltaHeightSliderChanged(_ sender: NSSliderCell) { simView.dataController?.deltaY = sender.floatValue }
     @IBAction func timeSliderChanged(_ sender: NSSliderCell) {
         if realTimeCheckBox.state == .off { simView.desiredVirtualFrameTime = sender.doubleValue }
@@ -68,9 +66,6 @@ class ViewController: NSViewController {
     @IBAction func gravitySliderChanged(_ sender: NSSliderCell) {
         simView.updater.gravity = sender.floatValue
     }
-    
-    
- 
     @IBAction func renderMovieCheckBoxChanged(_ sender: NSButtonCell) {
         if sender.state == .on {
             var url = FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask)[0]
@@ -80,6 +75,7 @@ class ViewController: NSViewController {
             simView.renderer.stopRecording()
         }
     }
+    /// more event processing (buttons)
     @IBAction func startSimBtn(_ sender: NSButton) { simView.shouldRun = true }
     @IBAction func stopSimBtn(_ sender: NSButton) { simView.shouldRun = false }
     @IBAction func resetSimBtn(_ sender: NSButton) { simView.resetSim(resetVirtualTime: true) }
@@ -91,7 +87,7 @@ class ViewController: NSViewController {
     @IBAction func startProgramBtn(_ sender: NSButton) { if simView.state == .running { simView.dataController?.startAutonomousControl() } }
     @IBAction func stopProgram(_ sender: NSButton) { if simView.state == .running { simView.dataController?.stopAutonomousControl() } }
     
-    
+    /// functions to update the labels which show height and force of the dataParticles and the time 
     func showHeight(_ value: String) { heightLbl.stringValue = value }
     func showForce(_ value: String) { forceLbl.stringValue = value }
     func showTime(_ value: String) { timeLbl.stringValue = value }

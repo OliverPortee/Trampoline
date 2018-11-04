@@ -2,22 +2,4 @@
 <Bucket
    type = "1"
    version = "2.0">
-   <Breakpoints>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "trampoline-gpu/Shaders.metal"
-            timestampString = "563017360.15371"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "50"
-            endingLineNumber = "50"
-            landmarkName = "spring_update(device Particle *particles [[ buffer(ParticleBufferIndex) ]], constant Spring *springs [[ buffer(SpringBufferIndex) ]], constant float *constants [[ buffer(ConstantBufferIndex) ]], uint id [[ thread_position_in_grid ]])"
-            landmarkType = "9">
-         </BreakpointContent>
-      </BreakpointProxy>
-   </Breakpoints>
 </Bucket>

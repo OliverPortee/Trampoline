@@ -28,11 +28,15 @@ class MeshUpdater: NSObject {
     func update(dt: Float, mesh: Mesh) {
         updateSprings(mesh: mesh)
         
-        dump(mesh.particleArray.map { $0.force }, name: nil, indent: 4, maxDepth: 10, maxItems: 50)
+//        dump(mesh.particleArray.map { $0.force }, name: nil, indent: 4, maxDepth: 10, maxItems: 50)
         if let dataController = self.dataController {
             dataController.update(dt: dt)
         }
-        print(dataController?.currentDataParticle.force)
+        if let force = dataController?.currentDataParticle.force {
+            if force != float3(0, 0, 0) {
+                print(dataController!.currentDataParticle.pos, force)
+            }
+        }
 
         updateParticles(dt: dt, mesh: mesh)
         

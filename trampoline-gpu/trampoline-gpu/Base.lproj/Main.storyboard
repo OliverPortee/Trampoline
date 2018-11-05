@@ -761,7 +761,7 @@
                                             </button>
                                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="jG7-IH-R6e">
                                                 <rect key="frame" x="414" y="2" width="108" height="18"/>
-                                                <buttonCell key="cell" type="check" title="real time" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="g92-do-x3Q">
+                                                <buttonCell key="cell" type="check" title="real time" bezelStyle="regularSquare" imagePosition="left" inset="2" id="g92-do-x3Q">
                                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                     <font key="font" metaFont="system"/>
                                                     <connections>
@@ -1295,12 +1295,18 @@
                     </view>
                     <connections>
                         <outlet property="forceLbl" destination="saJ-nC-ysc" id="L6d-OU-acc"/>
+                        <outlet property="gravitySlider" destination="Iwt-tf-S8u" id="ebM-c8-jIP"/>
                         <outlet property="heightLbl" destination="Tfd-n6-W7y" id="eZU-JQ-9WC"/>
+                        <outlet property="heightSlider" destination="XAD-fS-v9d" id="eJa-u0-jcH"/>
+                        <outlet property="innerSpringSlider" destination="V8g-2K-Cbe" id="tb7-WR-EGc"/>
+                        <outlet property="innerVelSlider" destination="0az-25-C8e" id="dt5-NZ-xbu"/>
+                        <outlet property="outerSpringSlider" destination="79r-04-R95" id="Kkf-qD-zi6"/>
+                        <outlet property="outerVelSlider" destination="Neq-au-Xff" id="GRU-6W-m0h"/>
                         <outlet property="realTimeCheckBox" destination="g92-do-x3Q" id="EbT-Zv-Aw5"/>
                         <outlet property="simView" destination="E0w-38-Ev7" id="KUG-cT-TZO"/>
                         <outlet property="simulationView" destination="E0w-38-Ev7" id="agk-FQ-3ZP"/>
                         <outlet property="timeLbl" destination="uiK-IX-oWB" id="4Dn-qj-Dz0"/>
-                        <outlet property="timeSlider" destination="4d2-tU-XNa" id="npQ-45-6f7"/>
+                        <outlet property="timeSlider" destination="ofh-fS-AlN" id="hvM-3G-E2m"/>
                     </connections>
                 </viewController>
                 <customObject id="rPt-NT-nkU" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>

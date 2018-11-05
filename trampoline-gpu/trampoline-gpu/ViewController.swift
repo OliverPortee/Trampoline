@@ -18,30 +18,48 @@ class ViewController: NSViewController {
     /// function called when main content view appears
     override func viewWillAppear() {
         super.viewWillAppear()
+
+        /// set default value of sliders
+        heightSlider.floatValue = 0.2
+        timeSlider.floatValue = 0.0001
+        innerSpringSlider.floatValue = 1
+        innerVelSlider.floatValue = 1
+        outerSpringSlider.floatValue = 1
+        outerVelSlider.floatValue = 1
+        gravitySlider.floatValue = 0
+        simView.desiredVirtualFrameTime = 0.0001
+        simView.updater.gravity = 0
         /// set parameters of the mesh
         let parameters = MeshParameters(r1: 3.3 / 2.0,
                                         r2: 2.62 / 2.0,
                                         fineness: 0.05,
                                         n_outerSprings: 72,
                                         innerSpringConstant: 1,
-                                        innerVelConstant: 0.5,
-                                        outerSpringConstant: 2,
+                                        innerVelConstant: 1,
+                                        outerSpringConstant: 1,
                                         outerVelConstant: 1,
                                         outerSpringLength: 0.17,
                                         n_dataParticles: 13)
-   
+
+        
         /// give the parameters to simulationView
         simView.setMeshParamters(parameters: parameters)
         /// start loading the model
         simView.loadModelInBackground(parameters: parameters)
     }
-    /// connections to UI elements (checkboxe and labels)
+    /// connections to UI elements (checkboxe, labels and sliders)
     @IBOutlet weak var realTimeCheckBox: NSButtonCell!
-    @IBOutlet weak var timeSlider: NSSliderCell!
     @IBOutlet weak var heightLbl: NSTextField!
     @IBOutlet weak var forceLbl: NSTextField!
     @IBOutlet weak var timeLbl: NSTextField!
-
+    @IBOutlet weak var heightSlider: NSSlider!
+    @IBOutlet weak var timeSlider: NSSlider!
+    @IBOutlet weak var innerSpringSlider: NSSlider!
+    @IBOutlet weak var innerVelSlider: NSSlider!
+    @IBOutlet weak var outerSpringSlider: NSSlider!
+    @IBOutlet weak var outerVelSlider: NSSlider!
+    @IBOutlet weak var gravitySlider: NSSlider!
+    
     /// glue code to respond to events triggered by the user (sliders and checkboxes)
     @IBAction func deltaHeightSliderChanged(_ sender: NSSliderCell) { simView.dataController?.deltaY = sender.floatValue }
     @IBAction func timeSliderChanged(_ sender: NSSliderCell) {
@@ -91,5 +109,8 @@ class ViewController: NSViewController {
     func showHeight(_ value: String) { heightLbl.stringValue = value }
     func showForce(_ value: String) { forceLbl.stringValue = value }
     func showTime(_ value: String) { timeLbl.stringValue = value }
+    
+    
+    
 }
 

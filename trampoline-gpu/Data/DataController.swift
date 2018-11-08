@@ -19,12 +19,14 @@ class DataController: FloatData2 {
     private var tasks = [Task]()
     /// when measurementProgram (autonomous control) moves dataParticles bejond dataParticleYMinimum, the model is reset
     private var dataParticleYMinimum: Float = -2
-    /// bool indicating whether dataController should measure height and force of dataParticles autonomously
-    private var shouldControlAutonomously: Bool = false
-    /// time since dataPartices height has been changed by autonomous control the last time
-    private var lastDataParticleChange: Float = 0
-    /// time interval between to measurements in autonomous control
+    /// enum indicating whether dataController should measure height and force of dataParticles autonomously
+    private var measurementState: MeasruementState = MeasruementState.noMeasurement { didSet{ lastStateChange = 0 } }
+    /// time since state has been changed the last time
+    private var lastStateChange: Float = 0
+    /// length of measurement time in autonomous control
     private var measurementLatency: Float = 0.1
+    /// length of waiting time in autonomous control
+    private var waitingLatency: Float = 0.1
     /// array of representatives of dataParticles; only valid for one frame (after that, they are reinitialized again)
     private(set) var currentDataParticles: [Particle]!
     /// indices of data particles in particleArray of model mesh
@@ -56,19 +58,18 @@ class DataController: FloatData2 {
         delegate?.resetSim(resetVirtualTime: false)
         delegate?.state = .running
         delegate?.shouldRun = true
-        lastDataParticleChange = 0
-        shouldControlAutonomously = true
+        lastStateChange = 0
+        measurementState = .shouldMeasure
         
     }
     /// stops autonomous measurement program
     func stopAutonomousControl() {
         endDataSet()
-        shouldControlAutonomously = false
+        measurementState = .noMeasurement
     }
     /// add a task (see enum Task)
     func addTask(_ task: Task) {
         tasks.append(task)
-        shouldControlAutonomously = false 
     }
     /// updates currentDataParticles for this frame
     private func fetchCurrentDataParticle() {
@@ -86,9 +87,10 @@ class DataController: FloatData2 {
         assert(dataParticleIndices != nil)
         assert(currentDataParticles != nil)
  
-        if shouldControlAutonomously {
-            lastDataParticleChange += dt
+        if measurementState != .noMeasurement {
+            lastStateChange += dt
             controlAutonomously()
+            tasks.removeAll()
         } else {
             for _ in 0..<tasks.count {
                 switch tasks[0] {
@@ -116,11 +118,16 @@ class DataController: FloatData2 {
     /// manages autonomous control:
     /// locks dataParticles if not already locked, moves the dataParticles down when time has come, resets model
     private func controlAutonomously() {
-        #warning("take multiple measures")
-        if currentDataParticles[0].isLocked == false { toggleLock() }
-        if currentDataParticles[0].pos.y <= dataParticleYMinimum { collectData(); startAutonomousControl() }
-        else if lastDataParticleChange >= measurementLatency { collectData(); moveDataParticleDown(); lastDataParticleChange = 0 }
-
+        switch measurementState {
+        case .noMeasurement: return
+        case .isWaiting:
+            if lastStateChange > waitingLatency { measurementState = .shouldMeasure }
+        case .shouldMeasure:
+            if lastStateChange > measurementLatency { measurementState = .isWaiting; moveDataParticleDown() }
+            if currentDataParticles[0].isLocked == false { toggleLock() }
+            collectData()
+            if currentDataParticles[0].pos.y <= dataParticleYMinimum { startAutonomousControl() }
+        }
     }
     /// saves current height and force of dataParticles
     func collectData() {

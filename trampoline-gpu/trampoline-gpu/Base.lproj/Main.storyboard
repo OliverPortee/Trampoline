@@ -989,7 +989,7 @@
                                     </slider>
                                     <slider verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="V8g-2K-Cbe">
                                         <rect key="frame" x="10" y="67" width="164" height="19"/>
-                                        <sliderCell key="cell" continuous="YES" state="on" alignment="left" maxValue="50" doubleValue="1" tickMarkPosition="above" sliderType="linear" id="BfX-Ae-bOK">
+                                        <sliderCell key="cell" continuous="YES" state="on" alignment="left" maxValue="100" doubleValue="1" tickMarkPosition="above" sliderType="linear" id="BfX-Ae-bOK">
                                             <connections>
                                                 <action selector="innerSpringConstantSliderChanged:" target="XfG-lQ-9wD" id="lgT-nB-7M4"/>
                                             </connections>
@@ -1011,7 +1011,7 @@
                                     </slider>
                                     <slider verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="79r-04-R95">
                                         <rect key="frame" x="10" y="33" width="164" height="19"/>
-                                        <sliderCell key="cell" continuous="YES" state="on" alignment="left" maxValue="50" doubleValue="1" tickMarkPosition="above" sliderType="linear" id="QAU-A5-0oj">
+                                        <sliderCell key="cell" continuous="YES" state="on" alignment="left" maxValue="100" doubleValue="1" tickMarkPosition="above" sliderType="linear" id="QAU-A5-0oj">
                                             <connections>
                                                 <action selector="outerSpringConstantSliderChanged:" target="XfG-lQ-9wD" id="6Tj-wm-Q7z"/>
                                             </connections>

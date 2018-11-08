@@ -104,7 +104,12 @@ enum ModelState {
     case `init`, parametersSet, loadingModel, readyToRun, running
 }
 
+/// enum MeasurementState to indicate whether measurement program is active
+enum MeasruementState {
+    case noMeasurement, shouldMeasure, isWaiting
+}
 
+/// struct which contains all parameters for initializing the mesh
 struct MeshParameters: CustomStringConvertible {
     
     var r1: Float

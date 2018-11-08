@@ -60,6 +60,7 @@
 		7515BB03218B69B20036B6E3 /* Shaders.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
 		7515BB04218B69B20036B6E3 /* VideoRecorder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoRecorder.swift; sourceTree = "<group>"; };
 		753F402E218E39090028F73B /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		759186062194ABA70057008A /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		75C647B9218C2E9500E95715 /* Updater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Updater.swift; sourceTree = "<group>"; };
 		75C647BF218C637B00E95715 /* Data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Data.swift; sourceTree = "<group>"; };
 		75C647C1218CA6C800E95715 /* DataController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataController.swift; sourceTree = "<group>"; };
@@ -95,10 +96,11 @@
 			children = (
 				75C647BE218C636600E95715 /* Data */,
 				75C647BD218C634A00E95715 /* Loop */,
-				75FF1D2B218B5F8A001627AC /* Other */,
 				750C1F22218A3F2200A49258 /* trampoline-gpu */,
+				75FF1D2B218B5F8A001627AC /* Other */,
 				75F116B7218F42A0004327F7 /* trampoline-gpuTests */,
 				750C1F21218A3F2200A49258 /* Products */,
+				759186052194ABA70057008A /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -123,6 +125,14 @@
 				750C1F29218A3F2200A49258 /* Main.storyboard */,
 			);
 			path = "trampoline-gpu";
+			sourceTree = "<group>";
+		};
+		759186052194ABA70057008A /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				759186062194ABA70057008A /* AVFoundation.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		75C647BD218C634A00E95715 /* Loop */ = {

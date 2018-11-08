@@ -71,16 +71,20 @@ class ViewController: NSViewController {
     }
     @IBAction func innerSpringConstantSliderChanged(_ sender: NSSliderCell) {
         simView.dataController?.addTask(.shouldSetInnerSpringConstant(value: sender.floatValue))
+        simView?.mesh.parameters.innerSpringConstant = sender.floatValue
     }
     @IBAction func innerVelConstantSliderChanged(_ sender: NSSliderCell) {
         simView.dataController?.addTask(.shouldSetInnerVelConstant(value: sender.floatValue))
+        simView?.mesh.parameters.innerVelConstant = sender.floatValue
     }
     @IBAction func outerSpringConstantSliderChanged(_ sender: NSSliderCell) {
         simView.dataController?.addTask(.shouldSetOuterSpringConstant(value: sender.floatValue))
-    }
+        simView?.mesh.parameters.outerSpringConstant = sender.floatValue
+}
     @IBAction func outerVelConstantSliderChanged(_ sender: NSSliderCell) {
         simView.dataController?.addTask(.shouldSetOuterVelConstant(value: sender.floatValue))
-    }
+        simView?.mesh.parameters.outerVelConstant = sender.floatValue
+}
     @IBAction func gravitySliderChanged(_ sender: NSSliderCell) {
         simView.updater.gravity = sender.floatValue
     }

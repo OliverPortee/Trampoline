@@ -107,7 +107,7 @@ class HelperGraphics: Renderable {
 class CircularTrampolineMesh: Mesh {
     
     /// meshParamters
-    private(set) var parameters: MeshParameters!
+    var parameters: MeshParameters!
     /// array of dataParticle indices
     private(set) var middleParticleIndices: [Int]!
     /// init function of CircularTrampolineMesh

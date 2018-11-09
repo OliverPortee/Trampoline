@@ -38,6 +38,12 @@ struct Spring: _StaticDefaultProperty {
     var initialLength: Float
     /// indices to springConstant (x) and velConstant (y) in constantsArray
     var constantsIndices: int2
+    /// init function for spring class
+    init(indices: int2, initialLength: Float, constantsIndices: int2) {
+        self.indices = indices
+        self.initialLength = initialLength
+        self.constantsIndices = constantsIndices
+    }
     /// static default value to conform to _StaticDefaultProperty protocol
     static var defaultSelf: Spring { return Spring(indices: int2(0, 1), initialLength: 1, constantsIndices: int2(0, 2)) }
     

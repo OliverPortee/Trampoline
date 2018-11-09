@@ -23,7 +23,7 @@ class ViewController: NSViewController {
         /// set parameters of the mesh
         let parameters = MeshParameters(r1: 3.3 / 2.0,
                                         r2: 2.62 / 2.0,
-                                        fineness: 0.03,
+                                        fineness: 0.07,
                                         n_outerSprings: 72,
                                         innerSpringConstant: 1,
                                         innerVelConstant: 1,

@@ -49,7 +49,7 @@ class SimulationView: MTKView, DataControllerDelegate {
         self.updater = MeshUpdater(device: self.device!, library: library, commandQueue: commandQueue, springFunctionName: "spring_update", particleFunctionName: "particle_update")
         /// creates matrizes
         let projectionMatrix = GLKMatrix4MakePerspective(85 * Float.pi / 180, self.frame.aspectRatio, 0.01, 100)
-        var parentModelMatrix = GLKMatrix4Identity; parentModelMatrix = GLKMatrix4Translate(parentModelMatrix, 0, 0, -3); parentModelMatrix = GLKMatrix4RotateX(parentModelMatrix, 20.0 * Float.pi / 180)
+        var parentModelMatrix = GLKMatrix4Identity; parentModelMatrix = GLKMatrix4Translate(parentModelMatrix, 0, 0.5, -3); parentModelMatrix = GLKMatrix4RotateX(parentModelMatrix, 20.0 * Float.pi / 180)
         /// creates mesh (which has no particles and springs yet)
         self.mesh = CircularTrampolineMesh(device: self.device!, projectionMatrix: projectionMatrix, parentModelMatrix: parentModelMatrix, updateHandler: {(_ dt: Float) in self.updater.update(dt: dt, mesh: self.mesh)})
         /// creates lastFrameTime to keep track of dt

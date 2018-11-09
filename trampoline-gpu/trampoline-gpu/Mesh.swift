@@ -18,7 +18,7 @@ class Mesh: Node, NonRealTimeRenderable {
     var springCount: Int { return springBuffer.length / StrideConstants.springStride }
     var particleCount: Int { return particleBuffer.length / StrideConstants.particleStride }
     /// background color
-    var clearColor: MTLClearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 1)
+    var clearColor: MTLClearColor = MTLClearColor(red: 1, green: 1, blue: 1, alpha: 1)
     /// returns particleArray by converting particleBuffer to array; expensive
     var particleArray: [Particle] { return Array<Particle>(fromMTLBuffer: particleBuffer) }
     /// returns springArray by converting springBuffer to array; expensive
@@ -353,6 +353,9 @@ extension CircularTrampolineMesh {
         
         
         connections.removeAll { $0.isValidSpring == false }
+        
+        print("springs:", connections.count)
+        print("particles:", helperParticles.count)
         
         
         /// converting helper class instances into required instances

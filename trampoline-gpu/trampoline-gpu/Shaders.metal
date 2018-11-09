@@ -108,7 +108,7 @@ vertex VertexOut particle_vertex_shader(constant Particle *particles [[ buffer(P
     /// applying matrizes
     out.position = uniforms.projectionMatrix * uniforms.modelViewMatrix * position;
     /// setting color
-    out.color = float4(1, 1, 1, 1);
+    out.color = float4(0, 0, 0, 1);
     
     return out;
 }

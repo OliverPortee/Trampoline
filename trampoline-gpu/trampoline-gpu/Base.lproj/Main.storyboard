@@ -978,7 +978,7 @@
                                     </slider>
                                     <slider verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="ofh-fS-AlN">
                                         <rect key="frame" x="10" y="85" width="164" height="19"/>
-                                        <sliderCell key="cell" continuous="YES" state="on" alignment="left" maxValue="0.01" doubleValue="0.001" tickMarkPosition="above" sliderType="linear" id="4d2-tU-XNa">
+                                        <sliderCell key="cell" continuous="YES" state="on" alignment="left" maxValue="0.001" doubleValue="0.0001" tickMarkPosition="above" sliderType="linear" id="4d2-tU-XNa">
                                             <connections>
                                                 <action selector="timeSliderChanged:" target="XfG-lQ-9wD" id="ZtA-jw-3Mt"/>
                                             </connections>

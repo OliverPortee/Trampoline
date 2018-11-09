@@ -19,6 +19,18 @@ class ViewController: NSViewController {
     override func viewWillAppear() {
         super.viewWillAppear()
 
+
+        /// set parameters of the mesh
+        let parameters = MeshParameters(r1: 3.3 / 2.0,
+                                        r2: 2.62 / 2.0,
+                                        fineness: 0.03,
+                                        n_outerSprings: 72,
+                                        innerSpringConstant: 1,
+                                        innerVelConstant: 1,
+                                        outerSpringConstant: 1,
+                                        outerVelConstant: 1,
+                                        outerSpringLength: 0.17,
+                                        n_dataParticles: 13)
         /// set default value of sliders
         heightSlider.floatValue = 0.2
         timeSlider.floatValue = 0.0001
@@ -29,19 +41,7 @@ class ViewController: NSViewController {
         gravitySlider.floatValue = 0
         simView.desiredVirtualFrameTime = 0.0001
         simView.updater.gravity = 0
-        /// set parameters of the mesh
-        let parameters = MeshParameters(r1: 3.3 / 2.0,
-                                        r2: 2.62 / 2.0,
-                                        fineness: 0.05,
-                                        n_outerSprings: 72,
-                                        innerSpringConstant: 1,
-                                        innerVelConstant: 1,
-                                        outerSpringConstant: 1,
-                                        outerVelConstant: 1,
-                                        outerSpringLength: 0.17,
-                                        n_dataParticles: 13)
-
-        
+        #warning("weil partikel zusammengefasst werden, müssen constants erhöht werden, da nun eine spring viele andere repräsentiert")
         /// give the parameters to simulationView
         simView.setMeshParamters(parameters: parameters)
         /// start loading the model

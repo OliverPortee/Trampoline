@@ -18,7 +18,7 @@ class DataController: FloatData2 {
     /// array of outstanding tasks the dataController is supposed to do (e. g. move dataParticles, see enum Tasks); like a command buffer
     private var tasks = [Task]()
     /// when measurementProgram (autonomous control) moves dataParticles bejond dataParticleYMinimum, the model is reset
-    private var dataParticleYMinimum: Float = -2
+    private var dataParticleYMinimum: Float = -3
     /// enum indicating whether dataController should measure height and force of dataParticles autonomously
     private var measurementState: MeasruementState = MeasruementState.noMeasurement { didSet{ lastStateChange = 0 } }
     /// time since state has been changed the last time

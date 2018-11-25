@@ -27,10 +27,8 @@ The program saves force and height of the data particle in a DoubleData instance
 There is still a lot to do:
 
 - control springconstants of outer springs (they seem inconsistent) 
-- synchronisation with ui at the beginning (mesh paramters from sliders)
 - get triple buffering and in flight semaphore right
-- real time rendering
-- make UI and Unit Tests
+- real time rendering into movie file 
 	
 ## Sources 
 Thanks to [this](https://github.com/warrenm/MetalOfflineRecording) repository! Helped a lot. 

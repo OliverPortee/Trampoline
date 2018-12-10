@@ -24,10 +24,10 @@ class ViewController: NSViewController {
                                         outerSpringConstant: 2264,
                                         outerVelConstant: 1,
                                         outerSpringLength: 0.17,
-                                        n_dataParticles: 9)
+                                        n_dataParticles: 25)
         /// set default value of sliders
         heightSlider.floatValue = 0.2
-        timeSlider.floatValue = 0.00004
+        timeSlider.floatValue = 0.00001
         innerSpringSlider.floatValue = 4000
         innerVelSlider.floatValue = 1
         outerSpringSlider.floatValue = 2264

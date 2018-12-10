@@ -97,6 +97,7 @@ class SimulationView: MTKView, DataControllerDelegate {
     /// called every frame to get dt, either from real time or from virtualTime
     private func updateTime() -> Double {
         let realDeltaTime = -lastFrameTime.timeIntervalSinceNow
+        // print(realDeltaTime)
         self.lastFrameTime = NSDate()
         if let virtualDeltaTime = desiredVirtualFrameTime { return virtualDeltaTime }
         return realDeltaTime

@@ -17,7 +17,6 @@
 		75C647BA218C2E9500E95715 /* Updater.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C647B9218C2E9500E95715 /* Updater.swift */; };
 		75C647C0218C637B00E95715 /* Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C647BF218C637B00E95715 /* Data.swift */; };
 		75C647C2218CA6C800E95715 /* DataController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C647C1218CA6C800E95715 /* DataController.swift */; };
-		75F116B9218F42A0004327F7 /* trampoline_gpuTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75F116B8218F42A0004327F7 /* trampoline_gpuTests.swift */; };
 		75F116C0218F44BA004327F7 /* Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C647BF218C637B00E95715 /* Data.swift */; };
 		75F116C1218F44BE004327F7 /* DataController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C647C1218CA6C800E95715 /* DataController.swift */; };
 		75F116C2218F44C3004327F7 /* Updater.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C647B9218C2E9500E95715 /* Updater.swift */; };
@@ -62,8 +61,6 @@
 		75C647BF218C637B00E95715 /* Data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Data.swift; sourceTree = "<group>"; };
 		75C647C1218CA6C800E95715 /* DataController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataController.swift; sourceTree = "<group>"; };
 		75F116B6218F42A0004327F7 /* trampoline-gpuTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "trampoline-gpuTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		75F116B8218F42A0004327F7 /* trampoline_gpuTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = trampoline_gpuTests.swift; sourceTree = "<group>"; };
-		75F116BA218F42A0004327F7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		75F116CB218F516E004327F7 /* UtilTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UtilTypes.swift; sourceTree = "<group>"; };
 		75FF1D25218B5B43001627AC /* SimulationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulationView.swift; sourceTree = "<group>"; };
 		75FF1D27218B5BA0001627AC /* Node.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Node.swift; sourceTree = "<group>"; };
@@ -95,7 +92,6 @@
 				75C647BD218C634A00E95715 /* Loop */,
 				750C1F22218A3F2200A49258 /* trampoline-gpu */,
 				75FF1D2B218B5F8A001627AC /* Other */,
-				75F116B7218F42A0004327F7 /* trampoline-gpuTests */,
 				750C1F21218A3F2200A49258 /* Products */,
 				759186052194ABA70057008A /* Frameworks */,
 			);
@@ -148,15 +144,6 @@
 				75C647C1218CA6C800E95715 /* DataController.swift */,
 			);
 			path = Data;
-			sourceTree = "<group>";
-		};
-		75F116B7218F42A0004327F7 /* trampoline-gpuTests */ = {
-			isa = PBXGroup;
-			children = (
-				75F116B8218F42A0004327F7 /* trampoline_gpuTests.swift */,
-				75F116BA218F42A0004327F7 /* Info.plist */,
-			);
-			path = "trampoline-gpuTests";
 			sourceTree = "<group>";
 		};
 		75FF1D2B218B5F8A001627AC /* Other */ = {
@@ -297,7 +284,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				75F116C6218F44D5004327F7 /* Shaders.metal in Sources */,
-				75F116B9218F42A0004327F7 /* trampoline_gpuTests.swift in Sources */,
 				75F116C2218F44C3004327F7 /* Updater.swift in Sources */,
 				75F116C9218F44E6004327F7 /* Node.swift in Sources */,
 				75F116C7218F44DD004327F7 /* ViewController.swift in Sources */,

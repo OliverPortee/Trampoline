@@ -17,7 +17,7 @@ class ViewController: NSViewController {
         /// set parameters of the mesh
         let parameters = CircularMeshParameters(r1: 3.3 / 2.0,
                                         r2: 1.31,
-                                        fineness: 0.03,
+                                        fineness: 0.06,
                                         n_outerSprings: 72,
                                         innerSpringConstant: 4000,
                                         innerVelConstant: 1,

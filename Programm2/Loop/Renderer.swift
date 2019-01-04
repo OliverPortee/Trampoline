@@ -1,5 +1,4 @@
 
-
 import Metal
 import GLKit
 
@@ -82,11 +81,11 @@ class Renderer: NSObject {
             }
         }
         
-//        _ = inFlightSemaphore.wait(timeout: DispatchTime.distantFuture)
-//        let semaphore = inFlightSemaphore
+        _ = inFlightSemaphore.wait(timeout: DispatchTime.distantFuture)
+        let semaphore = inFlightSemaphore
         /// commandBuffer contains all render commands the GPU should execute
         let commandBuffer = self.commandQueue.makeCommandBuffer()!
-//        commandBuffer.addCompletedHandler { (_) in semaphore.signal() }
+        commandBuffer.addCompletedHandler { (_) in semaphore.signal() }
         /// sets location and position of uniformBuffer
         uniformBufferIndex = (uniformBufferIndex + 1) % maxBuffersInFlight
         uniformBufferOffset = alignedUniformsSize * uniformBufferIndex
@@ -115,16 +114,3 @@ class Renderer: NSObject {
     }
     
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

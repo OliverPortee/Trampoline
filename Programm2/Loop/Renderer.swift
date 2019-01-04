@@ -1,4 +1,4 @@
-// recorder branch 
+// recorder branch
 import Metal
 import GLKit
 

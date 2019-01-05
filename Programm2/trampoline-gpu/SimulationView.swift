@@ -54,8 +54,8 @@ class SimulationView: MTKView, DataControllerDelegate {
         self.mesh = CircularTrampolineMesh(device: self.device!, projectionMatrix: projectionMatrix, parentModelMatrix: parentModelMatrix, updateHandler: {(_ dt: Float) in self.updater.update(dt: dt, mesh: self.mesh)})
         /// creates lastFrameTime to keep track of dt
         self.lastFrameTime = NSDate()
-
     }
+    
     /// gets meshParameters from the ViewController
     func setMeshParamters(parameters: CircularMeshParameters) {
         mesh.initParameters(parameters)
@@ -108,13 +108,23 @@ class SimulationView: MTKView, DataControllerDelegate {
         /// fetch dt
         let dt = updateTime()
         /// assures that there is a drawable available
-        guard currentDrawable != nil else { return }
+        guard let drawable = self.currentDrawable else { return }
         /// changes state if necesssary
         if shouldRun == true && state == .readyToRun {
             state = .running
         } else if shouldRun == false && state == .running {
             state = .readyToRun
         }
+        
+//        var texture: MTLTexture?
+//        if recorder != nil {
+//            var descriptor = MTLTextureDescriptor()
+//            descriptor.pixelFormat = .bgra8Unorm
+//            descriptor.width = 4000
+//            descriptor.height = 1618
+//            texture = self.device!.makeTexture(descriptor: descriptor)
+//        }
+//        else { texture = nil }
         /// renders and/or updates the model according to the current frame
         switch self.state! {
         /// do nothing when state is .init because model is not initialized yet
@@ -122,10 +132,10 @@ class SimulationView: MTKView, DataControllerDelegate {
             break
         /// renders blue edge of trampoline when model is initialized
         case .parametersSet, .loadingModel:
-            renderer.renderFrame(renderObject: mesh, drawable: currentDrawable!, renderOnlyOtherRenderObjects: true, dt: dt)
+            renderer.renderFrame(renderObject: mesh, drawable: drawable, renderOnlyOtherRenderObjects: true, dt: dt)//, texture: texture)
         /// renders mesh and blue edge when model is ready to run
         case .readyToRun:
-            renderer.renderFrame(renderObject: mesh, drawable: currentDrawable!, renderOnlyOtherRenderObjects: false, dt: dt)
+            renderer.renderFrame(renderObject: mesh, drawable: drawable, renderOnlyOtherRenderObjects: false, dt: dt)//, texture: texture)
             (window?.contentViewController as! ViewController).showHeight("!")
             (window?.contentViewController as! ViewController).showForce("!")
             (window?.contentViewController as! ViewController).showTime("!")
@@ -133,13 +143,14 @@ class SimulationView: MTKView, DataControllerDelegate {
         case .running:
             virtualTime += dt
             self.mesh.updateHandler(Float(dt))
-            renderer.renderFrame(renderObject: mesh, drawable: currentDrawable!, renderOnlyOtherRenderObjects: false, dt: dt)
+            renderer.renderFrame(renderObject: mesh, drawable: drawable, renderOnlyOtherRenderObjects: false, dt: dt)//, texture: texture)
             /// shows height and force of dataParticles and time
             (window?.contentViewController as! ViewController).showHeight(String(format: "%.2f", dataController?.dataParticleHeight ?? -999))
             (window?.contentViewController as! ViewController).showForce(String(format: "%.1f", dataController?.dataParticleForce.y ?? -999))
             (window?.contentViewController as! ViewController).showTime(String(format: "%.3f", virtualTime))
             
         }
+ 
     }
     
     /// method to reset simulation

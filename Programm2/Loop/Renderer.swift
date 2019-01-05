@@ -1,4 +1,4 @@
-// recorder branch
+
 import Metal
 import GLKit
 
@@ -27,6 +27,9 @@ class Renderer: NSObject {
     var uniformBufferIndex = 0
     var uniformBufferOffset = 0
     
+    var recorder: MetalVideoRecorder?
+    var recordTime: Double = 0
+    
     /**
      Init function of Renderer
      - Parameters:
@@ -42,6 +45,16 @@ class Renderer: NSObject {
         uniforms = UnsafeMutableRawPointer(dynamicUniformBuffer.contents()).bindMemory(to: Uniforms.self, capacity: 1)
         /// init of superclass NSObject
         super.init()
+    }
+    
+    func startRecording(url: URL, size: CGSize) {
+        self.recorder = MetalVideoRecorder(outputURL: url, size: size)
+        recorder?.startRecording()
+        self.recordTime = 0.0
+    }
+    
+    func endRecording(_ completionHandler: @escaping () -> ()) {
+        if self.recorder != nil { self.recorder?.endRecording(completionHandler) }
     }
     
     /// private function to render a Renderable
@@ -62,7 +75,7 @@ class Renderer: NSObject {
      - renderOnlyOtherRenderObjects: Bool which determines whether attached renderObjects should be rendered only
      - dt: frametime (i. e. 1 / framerate)
     */
-    func renderFrame(renderObject: BaseRenderable, drawable: CAMetalDrawable, renderOnlyOtherRenderObjects: Bool, dt: Double) {
+    func renderFrame(renderObject: BaseRenderable, drawable: CAMetalDrawable, renderOnlyOtherRenderObjects: Bool, dt: Double) {//, texture: MTLTexture?) {
         var shouldClear = true
         func getRenderPassDescriptor(drawable: CAMetalDrawable, clearColor: MTLClearColor) -> MTLRenderPassDescriptor {
             if shouldClear {
@@ -81,11 +94,13 @@ class Renderer: NSObject {
             }
         }
         
-        _ = inFlightSemaphore.wait(timeout: DispatchTime.distantFuture)
-        let semaphore = inFlightSemaphore
+//        _ = inFlightSemaphore.wait(timeout: DispatchTime.distantFuture)
+//        let semaphore = inFlightSemaphore
         /// commandBuffer contains all render commands the GPU should execute
         let commandBuffer = self.commandQueue.makeCommandBuffer()!
-        commandBuffer.addCompletedHandler { (_) in semaphore.signal() }
+//        commandBuffer.addCompletedHandler { (_) in semaphore.signal() }
+
+        
         /// sets location and position of uniformBuffer
         uniformBufferIndex = (uniformBufferIndex + 1) % maxBuffersInFlight
         uniformBufferOffset = alignedUniformsSize * uniformBufferIndex
@@ -105,12 +120,70 @@ class Renderer: NSObject {
             let renderPassDescriptor = getRenderPassDescriptor(drawable: drawable, clearColor: renderObject.clearColor)
             renderRenderable(otherRenderObject, commandBuffer: commandBuffer, renderPassDescriptor: renderPassDescriptor)
         }
-
+//
+//        if let texture = texture {
+//            let blit = commandBuffer.makeBlitCommandEncoder()!
+//            blit.synchronize(resource: drawable.texture)
+//            blit.copy(from: drawable.texture, sourceSlice: 0, sourceLevel: 0, sourceOrigin: MTLOrigin(x: 0, y: 0, z: 0), sourceSize: MTLSize(width: drawable.texture.width, height: drawable.texture.height, depth: drawable.texture.depth), to: texture, destinationSlice: 0, destinationLevel: 0, destinationOrigin: MTLOrigin(x: 0, y: 0, z: 0))
+//            blit.endEncoding()
+//        }
+        if let blitCommandEncoder = commandBuffer.makeBlitCommandEncoder() {
+            blitCommandEncoder.synchronize(resource: drawable.texture)
+            blitCommandEncoder.endEncoding()
+        }
+        if let r = self.recorder {
+            recordTime += dt
+            commandBuffer.addCompletedHandler { (_) in
+                r.writeFrame(forTexture: drawable.texture, time: self.recordTime)
+            }
+        }
         /// shows rendered content
         commandBuffer.present(drawable)
+        
+
         /// ends rendering process
         commandBuffer.commit()
+//        commandBuffer.waitUntilCompleted()
+        
+        
 
     }
     
 }
+
+
+
+
+
+//extension MTLTexture {
+//
+//    func bytes() -> UnsafeMutableRawPointer {
+//        let width = self.width
+//        let height   = self.height
+//        let rowBytes = self.width * 4
+//        let p = malloc(width * height * 4)
+//
+//        self.getBytes(p!, bytesPerRow: rowBytes, from: MTLRegionMake2D(0, 0, width, height), mipmapLevel: 0)
+//
+//        return p!
+//    }
+//
+//    func toImage() -> CGImage? {
+//        let p = bytes()
+//
+//        let pColorSpace = CGColorSpaceCreateDeviceRGB()
+//
+//        let rawBitmapInfo = CGImageAlphaInfo.noneSkipFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue
+//        let bitmapInfo:CGBitmapInfo = CGBitmapInfo(rawValue: rawBitmapInfo)
+//
+//        let selftureSize = self.width * self.height * 4
+//        let rowBytes = self.width * 4
+//        let releaseMaskImagePixelData: CGDataProviderReleaseDataCallback = { (info: UnsafeMutableRawPointer?, data: UnsafeRawPointer, size: Int) -> () in
+//            return
+//        }
+//        let provider = CGDataProvider(dataInfo: nil, data: p, size: selftureSize, releaseData: releaseMaskImagePixelData)
+//        let cgImageRef = CGImage(width: self.width, height: self.height, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: rowBytes, space: pColorSpace, bitmapInfo: bitmapInfo, provider: provider!, decode: nil, shouldInterpolate: true, intent: CGColorRenderingIntent.defaultIntent)!
+//
+//        return cgImageRef
+//    }
+//}

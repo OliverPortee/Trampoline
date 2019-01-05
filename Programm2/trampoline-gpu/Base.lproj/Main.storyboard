@@ -717,7 +717,7 @@
                                 <rect key="frame" x="20" y="20" width="1469" height="97"/>
                                 <subviews>
                                     <stackView distribution="fillEqually" orientation="horizontal" alignment="centerY" spacing="0.0" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="RfY-2w-RlI" userLabel="SimulationControl">
-                                        <rect key="frame" x="0.0" y="76" width="340" height="21"/>
+                                        <rect key="frame" x="0.0" y="76" width="425" height="21"/>
                                         <subviews>
                                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="4LE-87-x9y">
                                                 <rect key="frame" x="-6" y="-7" width="97" height="32"/>
@@ -759,14 +759,26 @@
                                                     </connections>
                                                 </buttonCell>
                                             </button>
+                                            <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="N6a-3s-69J">
+                                                <rect key="frame" x="338" y="2" width="89" height="18"/>
+                                                <buttonCell key="cell" type="check" title="record" bezelStyle="regularSquare" imagePosition="left" inset="2" id="Eun-tN-MPy">
+                                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                                    <font key="font" metaFont="system"/>
+                                                    <connections>
+                                                        <action selector="recordCheckBoxChanged:" target="XfG-lQ-9wD" id="gM4-AI-m2f"/>
+                                                    </connections>
+                                                </buttonCell>
+                                            </button>
                                         </subviews>
                                         <visibilityPriorities>
                                             <integer value="1000"/>
                                             <integer value="1000"/>
                                             <integer value="1000"/>
                                             <integer value="1000"/>
+                                            <integer value="1000"/>
                                         </visibilityPriorities>
                                         <customSpacing>
+                                            <real value="3.4028234663852886e+38"/>
                                             <real value="3.4028234663852886e+38"/>
                                             <real value="3.4028234663852886e+38"/>
                                             <real value="3.4028234663852886e+38"/>

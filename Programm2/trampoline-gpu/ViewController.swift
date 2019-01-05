@@ -62,6 +62,14 @@ class ViewController: NSViewController {
         if sender.state == .off { simView.desiredVirtualFrameTime = timeSlider.doubleValue }
         else { simView.desiredVirtualFrameTime = nil }
     }
+    @IBAction func recordCheckBoxChanged(_ sender: NSButtonCell) {
+        let dataURLString = NSString(string: "~/").expandingTildeInPath
+        let movieURL = URL(fileURLWithPath: "movie.m4v", relativeTo: URL(fileURLWithPath: dataURLString))
+        try? FileManager.default.removeItem(at: movieURL)
+
+        if sender.state == .on { simView.renderer.startRecording(url: movieURL, size: simView.drawableSize) }
+        else { simView.renderer.endRecording {} }
+    }
     @IBAction func innerSpringConstantSliderChanged(_ sender: NSSliderCell) {
         simView.dataController?.addTask(.shouldSetInnerSpringConstant(value: sender.floatValue))
         simView?.mesh.parameters.innerSpringConstant = sender.floatValue
